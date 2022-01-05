@@ -14,7 +14,6 @@ const letterGrid = {
 const keyboardKeyElements = [];
 let currentAttemptIndex = 0;
 let currentLetterIndex = 0;
-const prohibitedLetters = [];
 
 window.onload = function () {
   letterGrid.element = letterGridElement;
@@ -143,12 +142,11 @@ function onKey(key) {
   		const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
     	cell.frameElement.innerText = '';
     }
-  } else if (!prohibitedLetters.includes(key)) {
+  } else {
   	const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
   	cell.frameElement.innerText = key;
     ++currentLetterIndex;
   }
-
 }
 
 function commitCurrentWord() {

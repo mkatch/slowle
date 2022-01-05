@@ -8,6 +8,7 @@ body {
   background-color: #161d21;
   font-family: 'Open Sans', sans-serif;
   font-size: 16px;
+  font-weight: 400;
   color: white;
 }
 
@@ -45,6 +46,8 @@ h1 {
   align-items: center;
   flex: 1;
   margin: 40px 10px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 #letterGridElement {
