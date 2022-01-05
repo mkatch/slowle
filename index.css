@@ -5,8 +5,38 @@ html, body {
 }
 
 body {
+  background-color: #161d21;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 16px;
+  color: white;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border-bottom: 1px solid #313a3c;
+  padding: 5px 0;
+}
+
+header > * {
+  flex: none;
+}
+
+h1 {
+  font-size: 32px;
+  margin: 0;
+  padding: 0;
+  letter-spacing: 0.2em;
+}
+
+.game {
+  height: 100%;
   display: flex;
   flex-direction: column;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #boardElement {
@@ -14,6 +44,7 @@ body {
   justify-content: center;
   align-items: center;
   flex: 1;
+  margin: 40px 10px;
 }
 
 #letterGridElement {
@@ -54,7 +85,7 @@ body {
 
 .letter-frame {
   box-sizing: border-box;
-  border: 2px solid red;
+  border: 2px solid #313a3c;
 }
 
 [status] .letter-frame {
@@ -66,46 +97,50 @@ body {
 }
 
 [status=match] .committed-letter {
-  background-color: green;
+  background-color: #2E7D32;
 }
 
 [status=partial] .committed-letter {
-  background-color: yellow;
+  background-color: #e5d456;
 }
 
 [status=miss] .committed-letter {
-  background-color: grey;
+  background-color: #313a3c;
 }
 
 #keyboardElement {
   flex: none;
+  margin: 10px;
+  margin-top: 0;
 }
 
 .keyboard-row {
   display: flex;
   justify-content: center;
-  height: 50px;
+  height: 60px;
 }
 
 .keyboard-key {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid black;
-  margin: 2px;
+  margin: 4px 3px;
+  border-radius: 4px;
   cursor: pointer;
+  background-color: #879294;
+  min-width: 0;
 }
 
 .keyboard-key[status=match] {
-  background-color: green;
+  background-color: #2E7D32;
 }
 
 .keyboard-key[status=partial] {
-  background-color: yellow;
+  background-color: #e5d456;
 }
 
 .keyboard-key[status=miss] {
-  background-color: grey;
+  background-color: #313a3c;
 }
 
 .keyboard-key:not(.wide) {
@@ -128,6 +163,7 @@ body {
   right: 0;
   top: 20%;
   transition: opacity 200ms;
+  color: black;
 }
 
 #toastElement.opacity0 {
@@ -137,6 +173,5 @@ body {
 #toastElement > * {
   background-color: white;
   padding: 20px;
-  border: 1px solid black;
   border-radius: 4px;
 }

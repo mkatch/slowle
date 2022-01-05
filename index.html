@@ -3,16 +3,24 @@
   <head>
     <meta charset="utf-8">
     <title>Słowle—Wordle po polsku</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">  
     <link rel="stylesheet" href="index.css">
     <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="words.js"></script>
     <script type="text/javascript" src="solution.js"></script>
   </head>
   <body>
-    <div id="boardElement">
-      <div id="letterGridElement"></div>
+    <div class="game">
+      <header>
+        <h1>SŁOWLE</h1>
+      </header>
+      <div id="boardElement">
+        <div id="letterGridElement"></div>
+      </div>
+      <div id="keyboardElement"></div>
+      <div id="toastElement"><div></div></div>
     </div>
-    <div id="keyboardElement"></div>
-    <div id="toastElement"><div></div></div>
   </body>
 </html>

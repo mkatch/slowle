@@ -201,7 +201,11 @@ function commitCurrentWord() {
   }
 
   applyLetterStatuses(row, function () {
-    showToast("Brawo!");
+    if (matchCount == WORD_LENGTH) {
+      showToast("Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1));
+    } else if (currentAttemptIndex == ATTEMPT_COUNT) {
+      showToast("Niestety nie udało się tym razem");
+    }
   });
 }
 
