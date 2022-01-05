@@ -1,0 +1,1 @@
+SOLUTION = "SŁOWO";

@@ -1,0 +1,142 @@
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#boardElement {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+#letterGridElement {
+  display: flex;
+  flex-direction: column;
+}
+
+.letter-row {
+  display: flex;
+  
+}
+
+.letter-cell {
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.letter-cell .content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.letter-frame, .committed-letter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  transition: transform 1s;
+}
+
+.letter-frame {
+  box-sizing: border-box;
+  border: 2px solid red;
+}
+
+[status] .letter-frame {
+  transform: rotateX(180deg);
+}
+
+.letter-cell:not([status]) .committed-letter {
+  transform: rotateX(-180deg);
+}
+
+[status=match] .committed-letter {
+  background-color: green;
+}
+
+[status=partial] .committed-letter {
+  background-color: yellow;
+}
+
+[status=miss] .committed-letter {
+  background-color: grey;
+}
+
+#keyboardElement {
+  flex: none;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  height: 50px;
+}
+
+.keyboard-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+  margin: 2px;
+  cursor: pointer;
+}
+
+.keyboard-key[status=match] {
+  background-color: green;
+}
+
+.keyboard-key[status=partial] {
+  background-color: yellow;
+}
+
+.keyboard-key[status=miss] {
+  background-color: grey;
+}
+
+.keyboard-key:not(.wide) {
+  width: 8%;
+}
+
+.keyboard-key.wide {
+  flex: 1;
+}
+
+#toastElement:not(.visible) {
+  visibility: hidden;
+}
+
+#toastElement {
+  display: flex;
+  justify-content: center;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 20%;
+  transition: opacity 200ms;
+}
+
+#toastElement.opacity0 {
+  opacity: 0;
+}
+
+#toastElement > * {
+  background-color: white;
+  padding: 20px;
+  border: 1px solid black;
+  border-radius: 4px;
+}
