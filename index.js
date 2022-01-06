@@ -14,8 +14,11 @@ const letterGrid = {
 const keyboardKeyElements = [];
 let currentAttemptIndex = 0;
 let currentLetterIndex = 0;
+let solution = null;
 
 window.onload = function () {
+  solution = WORDS[SOLUTION_INDEX];
+
   letterGrid.element = letterGridElement;
 
 	for (let i = 0; i < ATTEMPT_COUNT; ++i) {
@@ -115,7 +118,7 @@ function onKey(key) {
 	if (currentAttemptIndex >= ATTEMPT_COUNT) {
   	return;
   }
-  if (!WORDS || !SOLUTION) {
+  if (!WORDS || !solution) {
     return;
   }
   
@@ -161,13 +164,13 @@ function commitCurrentWord() {
     return;
   }
 
-  const solutionLetters = SOLUTION.split('');
+  const solutionLetters =  solution.split('');
   let matchCount = 0;
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.frameElement.textContent;
-    if (letter == SOLUTION[j]) {
+    if (letter ==  solution[j]) {
       cell.status = 'match';
       ++matchCount;
       solutionLetters.splice(solutionLetters.indexOf(letter), 1);
