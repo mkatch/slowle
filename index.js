@@ -17,8 +17,10 @@ let currentLetterIndex = 0;
 let solution = null;
 
 window.onload = function () {
-  solution = WORDS[SOLUTION_INDEX];
+  loadSolution(initializeGame);
+};
 
+function initializeGame() {
   letterGrid.element = letterGridElement;
 
 	for (let i = 0; i < ATTEMPT_COUNT; ++i) {
@@ -80,6 +82,9 @@ window.onload = function () {
     
     keyboardElement.append(rowElement);
   }
+
+  window.onresize = onWindowResize;
+  window.onkeydown = onWindowKeyDown;
   
   onWindowResize();
 };
@@ -98,9 +103,8 @@ function onWindowResize() {
     }
   }
 }
-window.onresize = onWindowResize;
 
-window.onkeydown = function (e) {
+function onWindowKeyDown(e) {
 	if (e.keyCode == 13) {
     onKey('ENTER');
   } else if (e.keyCode == 8) {
@@ -117,9 +121,6 @@ function onKeyClick(e) {
 function onKey(key) {
 	if (currentAttemptIndex >= ATTEMPT_COUNT) {
   	return;
-  }
-  if (!WORDS || !solution) {
-    return;
   }
   
   let supported = false;
@@ -164,13 +165,13 @@ function commitCurrentWord() {
     return;
   }
 
-  const solutionLetters =  solution.split('');
+  const solutionLetters =  solution.word.split('');
   let matchCount = 0;
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.frameElement.textContent;
-    if (letter ==  solution[j]) {
+    if (letter ==  solution.word[j]) {
       cell.status = 'match';
       ++matchCount;
       solutionLetters.splice(solutionLetters.indexOf(letter), 1);
@@ -233,6 +234,50 @@ function applyLetterStatuses(row, callback) {
     }, j * 300);
   }
   setTimeout(callback, WORD_LENGTH * 300);
+}
+
+function loadSolution(callback) {
+  let callbackCalled = false;
+  const guardedCallback = function (candidate) {
+    if (callbackCalled) {
+      return;
+    }
+    callbackCalled = true;
+
+    if (candidate) {
+      solution = {
+        word: WORDS[candidate.index],
+        expiration: candidate.expiration
+      };
+      callback();
+    } else {
+      solution = null;
+      showToast("Nie można załadować słowa. Spróbuj ponownie później.")
+    }
+  }
+  const failureCallback = function () { guardedCallback(null); }
+
+  const request = new XMLHttpRequest();
+  request.open('GET', "solution.json", true);
+  request.timeout = 5000;
+  request.onerror = failureCallback;
+  request.ontimeout = failureCallback;
+
+  request.onload = function () {
+    const now = Date.now();
+    const candidates = JSON.parse(request.responseText);
+    for (let i = 0; i < candidates.length; ++i) {
+      const candidate = candidates[i];
+      candidate.expiration = Date.parse(candidate.expiration);
+      if (now <= candidate.expiration) {
+        guardedCallback(candidate);
+        return;
+      }
+    }
+    failureCallback();
+  }
+
+  request.send(null);
 }
 
 function getKeyboardKeyElement(letter) {
