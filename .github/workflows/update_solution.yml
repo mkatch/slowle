@@ -1,0 +1,20 @@
+name: update_solution
+on:
+  schedule:
+    - cron: '30 22 * * *' # Each day 23:30 CST
+jobs:
+  update-solution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: node update_solution.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - run: |
+          git add .
+          git commit -m 'Update solution'
+          git push

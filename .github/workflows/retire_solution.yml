@@ -1,0 +1,20 @@
+name: retire_solution
+on:
+  schedule:
+    - cron: '0 23 * * *' # Each day 00:00 CST
+jobs:
+  update-solution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: node retire_solution.js
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+      - run: |
+          git add .
+          git commit -m 'Retire solution'
+          git push
