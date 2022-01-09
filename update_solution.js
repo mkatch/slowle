@@ -33,7 +33,7 @@ const expiration =
   tomorrowAroundNoonPL.getUTCFullYear() + "-" +
   padZeros(tomorrowAroundNoonPL.getUTCMonth() + 1, 2) + "-" +
   padZeros(tomorrowAroundNoonPL.getUTCDate(), 2) + " " +
-  "CST"; // TODO: Use proper time zone.
+  "GMT+1"; // TODO: Use proper time zone.
 
 const solutions = readJson('solution.json');
 solutions.push({
