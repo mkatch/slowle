@@ -275,7 +275,8 @@ function loadSolution(callback) {
   const failureCallback = function () { guardedCallback(null); }
 
   const request = new XMLHttpRequest();
-  request.open('GET', "solution.json", true);
+  // Adding timestamp query parameter to prevent caching.
+  request.open('GET', "solution.json" + "?t=" + Date.now(), true);
   request.timeout = 5000;
   request.onerror = failureCallback;
   request.ontimeout = failureCallback;
