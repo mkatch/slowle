@@ -178,3 +178,73 @@ h1 {
   padding: 20px;
   border-radius: 4px;
 }
+
+#popupOverlayElement {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+#popupOverlayElement:not([which]) {
+  visibility: hidden;
+}
+
+#popupOverlayElement:not([which=stats]) .stats-popup {
+  display: none;
+}
+
+.popup-overlay-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#popupCloseButtonElement {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 30px;
+  color: #879294;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+.popup {
+  position: relative;
+  margin: 10px;
+  background-color: #161d21;
+  border: 1px solid #313a3c;
+  border-radius: 10px;
+  overflow-y: auto;
+  padding: 30px;
+}
+
+#statsPopupMessageElement {
+  margin-bottom: 20px;
+}
+
+#statsPopupMessageElement:empty {
+  display: none;
+}
+
+.countdown {
+  text-align: center;
+}
+
+#countdownElement {
+  font-size: 36px;
+}

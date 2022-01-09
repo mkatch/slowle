@@ -20,7 +20,23 @@
         <div id="letterGridElement"></div>
       </div>
       <div id="keyboardElement"></div>
-      <div id="toastElement"><div></div></div>
     </div>
+    <div id="popupOverlayElement">
+      <div class="popup-overlay-content">
+        <div class="popup">
+          <button id="popupCloseButtonElement" onclick="hidePopup()">
+            ×
+          </button>
+          <div class="stats-popup">
+            <div id="statsPopupMessageElement"></div>
+            <div class="countdown">
+              Następny Słowle za:
+              <div id="countdownElement"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="toastElement"><div></div></div>
   </body>
 </html>

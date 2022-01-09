@@ -12,6 +12,7 @@ const letterGrid = {
   rows: [],
 }
 const keyboardKeyElements = [];
+let successfulAttemptIndex = null;
 let currentAttemptIndex = 0;
 let currentLetterIndex = 0;
 let solution = null;
@@ -83,11 +84,22 @@ function initializeGame() {
     keyboardElement.append(rowElement);
   }
 
+  setInterval(everySecond, 1000);
+
   window.onresize = onWindowResize;
   window.onkeydown = onWindowKeyDown;
   
   onWindowResize();
 };
+
+function everySecond() {
+  const millisLeft = solution.expiration - Date.now();
+  if (millisLeft <= 0) {
+    location.reload();
+  } else {
+    countdownElement.textContent = new Date(millisLeft).toTimeString().slice(0, 8);
+  }
+}
 
 function onWindowResize() {
 	const boardRect = boardElement.getBoundingClientRect();
@@ -122,6 +134,9 @@ function onKey(key) {
 	if (currentAttemptIndex >= ATTEMPT_COUNT) {
   	return;
   }
+  if (popupOverlayElement.hasAttribute('which')) {
+    return;
+  }
   
   let supported = false;
   for (let i = 0; i < KEYBOARD_ROWS.length; ++i) {
@@ -146,7 +161,7 @@ function onKey(key) {
   		const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
     	cell.frameElement.innerText = '';
     }
-  } else {
+  } else if (currentLetterIndex < WORD_LENGTH) {
   	const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
   	cell.frameElement.innerText = key;
     ++currentLetterIndex;
@@ -200,13 +215,15 @@ function commitCurrentWord() {
   } else {
     ++currentAttemptIndex;
     currentLetterIndex = 0;
+    if (currentAttemptIndex == ATTEMPT_COUNT) {
+      successfulAttemptIndex = -1;
+    }
   }
 
+  const attemptIndex = currentAttemptIndex;
   applyLetterStatuses(row, function () {
-    if (matchCount == WORD_LENGTH) {
-      showToast("Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1));
-    } else if (currentAttemptIndex == ATTEMPT_COUNT) {
-      showToast("Niestety nie udało się tym razem");
+    if (matchCount == WORD_LENGTH || attemptIndex == ATTEMPT_COUNT) {
+      showStatsPopup();
     }
   });
 }
@@ -233,7 +250,7 @@ function applyLetterStatuses(row, callback) {
       }
     }, j * 300);
   }
-  setTimeout(callback, WORD_LENGTH * 300);
+  setTimeout(callback, (WORD_LENGTH - 1) * 300 + 2000);
 }
 
 function loadSolution(callback) {
@@ -314,11 +331,24 @@ function showToast(message) {
   });
 }
 
-function showOverlay(element, duration) {
+function showPopup(which) {
+  popupOverlayElement.setAttribute('which', which);
 }
 
-function hideOverlay(element) {
-  element.classList.remove('visible');
+function hidePopup() {
+  popupOverlayElement.removeAttribute('which');
+}
+
+function showStatsPopup() {
+  if (successfulAttemptIndex != null) {
+    if (successfulAttemptIndex >= 0) {
+      statsPopupMessageElement.textContent = "Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1);
+    } else {
+      statsPopupMessageElement.textContent = "Niestety nie udało się tym razem";
+    }
+  }
+  statsPopupMessageElement
+  showPopup('stats');
 }
 
 function statusPriority(status) {
