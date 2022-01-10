@@ -23,16 +23,19 @@ const wordindex = pool[poolIndex];
 pool.splice(poolIndex, 1);
 writeJson(pool, 'pool.json');
 
-// This script is supposed to be run every day before midnight in Poland,
-// which is UTC+1 or UTC+2 depending on the time of year. By adding 12 hours
-// to the current time, we are accounting for the time zone differences and
-// schedule inconsistencies with more than a safe margin. When querying the UTC
-// date, we will get the tomorrow's day in Poland. 
-const tomorrowAroundNoonPL = new Date(Date.now() + 12 * 60 * 60 * 1000);
+// This script is supposed to run every day before midnight in Poland, which
+// is GMT+1 or GMT+2, depending on the time of year. We advance the time by 12
+// hours to be around noon the following day. This accounts for time zone
+// differences and scheduling incosistencies with a safe margin. Then we advance
+// by another 24 hours so that reading the UTC date gives the intended
+// expiration date. Note that the local timezone in which this script is
+// executed is not defined nor required.
+const aroundNoonOnExpirationDayInPL =
+  new Date(Date.now() + (12 + 24) * 60 * 60 * 1000);
 const expiration =
-  tomorrowAroundNoonPL.getUTCFullYear() + "-" +
-  padZeros(tomorrowAroundNoonPL.getUTCMonth() + 1, 2) + "-" +
-  padZeros(tomorrowAroundNoonPL.getUTCDate(), 2) + " " +
+  aroundNoonOnExpirationDayInPL.getUTCFullYear() + "-" +
+  padZeros(aroundNoonOnExpirationDayInPL.getUTCMonth() + 1, 2) + "-" +
+  padZeros(aroundNoonOnExpirationDayInPL.getUTCDate(), 2) + " " +
   "GMT+1"; // TODO: Use proper time zone.
 
 const solutions = readJson('solution.json');
