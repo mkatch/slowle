@@ -16,6 +16,7 @@ let successfulAttemptIndex = null;
 let currentAttemptIndex = 0;
 let currentLetterIndex = 0;
 let solution = null;
+let progress = null;
 
 window.onload = function () {
   loadSolution(initializeGame);
@@ -90,6 +91,8 @@ function initializeGame() {
   window.onkeydown = onWindowKeyDown;
   
   onWindowResize();
+
+  loadProgress();
 };
 
 function everySecond() {
@@ -151,7 +154,7 @@ function onKey(key) {
   
   if (key == 'ENTER') {
   	if (currentLetterIndex == WORD_LENGTH) {
-    	commitCurrentWord();
+    	commitCurrentAttempt();
     } else {
       showToast('Wpisz 5-literowe słowo');
     }
@@ -168,7 +171,7 @@ function onKey(key) {
   }
 }
 
-function commitCurrentWord() {
+function commitCurrentAttempt() {
   let word = "";
   const row = letterGrid.rows[currentAttemptIndex];
   for (let j = 0; j < WORD_LENGTH; ++j) {
@@ -177,10 +180,22 @@ function commitCurrentWord() {
 
   if (!WORDS.includes(word)) {
     showToast('Słowo "' + word + '" nie występuje w słowniku');
-    return;
+    return null;
   }
 
-  const solutionLetters =  solution.word.split('');
+  progress.attempts[currentAttemptIndex] = word;
+  saveProgress();
+  
+  const attemptIndex = currentAttemptIndex;
+  checkCurrentAttempt();
+
+  const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
+  animateAttemptStatus(attemptIndex, callback);
+}
+
+function checkCurrentAttempt() {
+  const row = letterGrid.rows[currentAttemptIndex];
+  const solutionLetters = solution.word.split('');
   let matchCount = 0;
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
@@ -215,42 +230,63 @@ function commitCurrentWord() {
   } else {
     ++currentAttemptIndex;
     currentLetterIndex = 0;
-    if (currentAttemptIndex == ATTEMPT_COUNT) {
+    if (currentAttemptIndex >= ATTEMPT_COUNT) {
       successfulAttemptIndex = -1;
     }
   }
-
-  const attemptIndex = currentAttemptIndex;
-  applyLetterStatuses(row, function () {
-    if (matchCount == WORD_LENGTH || attemptIndex == ATTEMPT_COUNT) {
-      showStatsPopup();
-    }
-  });
 }
 
-function applyLetterStatuses(row, callback) {
-  const keyCells = {};
+function animateAttemptStatus(attemptIndex, callback, interval = 300) {
+  const row = letterGrid.rows[attemptIndex];
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.frameElement.textContent;
     cell.committedElement.textContent = letter;
 
-    if (
-        !(letter in keyCells) ||
-        statusPriority(cell.status) > statusPriority(keyCells[letter].status)) {
-      keyCells[letter] = cell;
-    }
-
     setTimeout(function () {
       cell.element.setAttribute('status', cell.status);
-      if (keyCells[letter] === cell) {
-        const keyElement = getKeyboardKeyElement(letter);
+      const keyElement = getKeyboardKeyElement(letter);
+      if (
+          statusPriority(cell.status) >
+          statusPriority(keyElement.getAttribute('status'))) {
         keyElement.setAttribute('status', cell.status);
       }
-    }, j * 300);
+    }, j * interval);
   }
-  setTimeout(callback, (WORD_LENGTH - 1) * 300 + 2000);
+
+  if (callback) {
+    setTimeout(callback, (WORD_LENGTH - 1) * interval + 1000);
+  }
+}
+
+function loadProgress() {
+  progress = localStorage.getItem('progress');
+  if (progress) {
+    progress = JSON.parse(progress);
+  }
+  if (!progress || progress.solutionId != solution.id) {
+    progress = {
+      solutionId: solution.id,
+      attempts: [],
+    }
+    saveProgress();
+  }
+
+  for (let i = 0; i < progress.attempts.length; ++i) {
+    const row = letterGrid.rows[i];
+    const word = progress.attempts[i];
+    for (let j = 0; j < WORD_LENGTH; ++j) {
+      row.cells[j].frameElement.textContent = word[j];
+    }
+    checkCurrentAttempt();
+    const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
+    setTimeout(function () { animateAttemptStatus(i, callback, 50); }, i * 200);
+  }
+}
+
+function saveProgress() {
+  localStorage.setItem('progress', JSON.stringify(progress));
 }
 
 function loadSolution(callback) {
@@ -262,10 +298,8 @@ function loadSolution(callback) {
     callbackCalled = true;
 
     if (candidate) {
-      solution = {
-        word: WORDS[candidate.index],
-        expiration: candidate.expiration
-      };
+      solution = candidate;
+      solution.word = WORDS[candidate.index];
       callback();
     } else {
       solution = null;
@@ -348,7 +382,6 @@ function showStatsPopup() {
       statsPopupMessageElement.textContent = "Niestety nie udało się tym razem";
     }
   }
-  statsPopupMessageElement
   showPopup('stats');
 }
 
