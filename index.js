@@ -377,10 +377,11 @@ function hidePopup() {
 function showStatsPopup() {
   if (successfulAttemptIndex != null) {
     if (successfulAttemptIndex >= 0) {
-      statsPopupMessageElement.textContent = "Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1);
+      statsPopupVerdictElement.textContent = "Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1);
     } else {
-      statsPopupMessageElement.textContent = "Niestety nie udało się tym razem";
+      statsPopupVerdictElement.textContent = "Niestety nie udało się tym razem";
     }
+    statsPopupSolutionElement.textContent += "Rozwiązanie: \"" + solution.word + "\"";
   }
   showPopup('stats');
 }

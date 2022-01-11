@@ -233,11 +233,13 @@ h1 {
   padding: 30px;
 }
 
-#statsPopupMessageElement {
+.stats-popup-message {
+  text-align: center;
+  margin-top: 10px;
   margin-bottom: 20px;
 }
 
-#statsPopupMessageElement:empty {
+.stats-popup-message:empty {
   display: none;
 }
 
