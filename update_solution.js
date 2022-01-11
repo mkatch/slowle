@@ -35,8 +35,8 @@ const aroundNoonOnExpirationDayInPL =
 const expiration =
   aroundNoonOnExpirationDayInPL.getUTCFullYear() + "-" +
   padZeros(aroundNoonOnExpirationDayInPL.getUTCMonth() + 1, 2) + "-" +
-  padZeros(aroundNoonOnExpirationDayInPL.getUTCDate(), 2) + " " +
-  "GMT+1"; // TODO: Use proper time zone.
+  padZeros(aroundNoonOnExpirationDayInPL.getUTCDate(), 2) +
+  "T00:00:00+0100"; // TODO: Use proper time zone.
 
 const solutions = readJson('solution.json');
 solutions.push({
