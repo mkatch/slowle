@@ -39,7 +39,9 @@ const expiration =
   "T00:00:00+0100"; // TODO: Use proper time zone.
 
 const solutions = readJson('solution.json');
+const latestSolution = solutions[solutions.length - 1];
 solutions.push({
+  id: latestSolution.id + 1,
   index: wordindex,
   expiration: expiration
 });
