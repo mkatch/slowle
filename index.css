@@ -12,7 +12,12 @@ body {
   color: white;
 }
 
+p {
+  margin: 1em 0;
+}
+
 header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -22,6 +27,11 @@ header {
 
 header > * {
   flex: none;
+}
+
+.help-button {
+  position: absolute;
+  left: 0;
 }
 
 .title {
@@ -79,7 +89,6 @@ h1 {
 
 .letter-row {
   display: flex;
-  
 }
 
 .letter-cell {
@@ -218,6 +227,10 @@ h1 {
   display: none;
 }
 
+#popupOverlayElement:not([which=about]) .about-popup {
+  display: none;
+}
+
 .popup-overlay-content {
   display: flex;
   align-items: center;
@@ -233,6 +246,9 @@ h1 {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -271,4 +287,34 @@ h1 {
 
 #countdownElement {
   font-size: 36px;
+}
+
+.about-popup a {
+  color: white;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.about-popup .letter-cell {
+  width: 40px;
+  height: 40px;
+}
+
+.about-popup .letter-row {
+  justify-content: center;
+}
+
+.about-popup .new-word {
+  display: flex;
+  align-items: center;
+  margin-top: 1em;
+}
+
+.about-popup .new-word p {
+  margin: 1em;
+}
+
+.about-popup .new-word .line {
+  flex: 1;
+  border-top: 1px solid #879294;
 }

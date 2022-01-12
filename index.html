@@ -23,6 +23,7 @@
   <body>
     <div class="game">
       <header>
+        <button class="icon-button help-button" onclick="showAboutPopup()">?</button>
         <div class="title">
           <h1>SŁOWLE</h1>
           <span class="subtitle">
@@ -44,9 +45,10 @@
     <div id="popupOverlayElement">
       <div class="popup-overlay-content">
         <div class="popup">
-          <button id="popupCloseButtonElement" onclick="hidePopup()">
+          <button id="popupCloseButtonElement" class="icon-button" onclick="hidePopup()">
             ×
           </button>
+
           <div class="stats-popup">
             <div class="stats-popup-message">
               <div id="statsPopupVerdictElement"></div>
@@ -55,6 +57,44 @@
             <div class="countdown">
               Następny Słowle za:
               <div id="countdownElement"></div>
+            </div>
+          </div>
+
+          <div class="about-popup">
+            <p>
+              <b>SŁOWLE</b> to nieoficjalne polska wersja angielskiej gry słownej
+              <a
+                  href="https://www.powerlanguage.co.uk/wordle/"
+                  target="blank" rel="noopener">
+                WORDLE
+              </a>.
+            </p>
+            <p>
+              Spróbuj odgadnąć ukryte 5-literowe słowo w 6-ciu próbach. Każda
+              próba musi być prawdziwym polskim słowem. Po zaakceptowaniu
+              przyciskiem ENTER, kafelki z literami pokażą ci jak blisko jest
+              twój typ.
+            </p>
+            <p>
+              Przykład:
+            </p>
+            <div id="exampleAttemptRowElement">TRĄBY</div>
+            <p>
+              Litery <b>Ą</b> i <b>Y</b> występują w rozwiązaniu i są na
+              właściwych miejscach. Litera <b>R</b> też występuje, ale na innym
+              miejscu. Natomiast liter <b>T</b>, <b>B</b>, <b>A</b> w ogóle nie
+              ma w rozwiązaniu.
+            </p>
+            <p>
+              Dla porównania, rozwiązanie to
+            </p>
+            <div id="exampleSolutionRowElement">RZĄDY</div>
+            <div class="new-word">
+              <div class="line"></div>
+              <p class="new-word">
+                Nowe słowo każdego dnia!
+              </p>
+              <div class="line"></div>
             </div>
           </div>
         </div>

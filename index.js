@@ -11,6 +11,8 @@ const WIDE_KEYS = ['ENTER', '⌫'];
 const letterGrid = {
   rows: [],
 }
+let exampleAttemptRow = null;
+let exampleSolutionRow = null;
 const keyboardKeyElements = [];
 let successfulAttemptIndex = null;
 let currentAttemptIndex = 0;
@@ -30,37 +32,25 @@ function initializeGame() {
     	element: document.createElement('div'),
       cells: [],
     };
-    row.element.classList.add('letter-row');
-    
-    for (let j = 0; j < WORD_LENGTH; ++j) {
-      const cellElement = document.createElement('div');
-      cellElement.classList.add('letter-cell');
-
-      const contentElement = document.createElement('div');
-      contentElement.classList.add('content');
-      cellElement.append(contentElement);
-
-      const frameElement = document.createElement('div');
-      frameElement.classList.add('letter-frame');
-      contentElement.append(frameElement);
-
-      const committedElement = document.createElement('div');
-      committedElement.classList.add('committed-letter');
-      contentElement.append(committedElement);
-
-      cell = {
-        element: cellElement,
-        frameElement: frameElement,
-        committedElement: committedElement,
-      }
-      
-      row.element.append(cell.element);
-      row.cells.push(cell);
-    }
+    initializeRow(row);
     
     letterGrid.element.append(row.element);
     letterGrid.rows.push(row);
   }
+
+  const exampleSolutionWord = exampleSolutionRowElement.textContent;
+  exampleAttemptRow = {
+    element: exampleAttemptRowElement,
+    cells: [],
+  }
+  initializeRow(exampleAttemptRow);
+  checkRow(exampleAttemptRow, exampleSolutionWord);
+  exampleSolutionRow = {
+    element: exampleSolutionRowElement,
+    cells: [],
+  }
+  initializeRow(exampleSolutionRow);
+  checkRow(exampleSolutionRow, exampleSolutionWord);
   
   for (let i = 0; i < KEYBOARD_ROWS.length; ++i) {
   	const keyboardRow = KEYBOARD_ROWS[i];
@@ -93,7 +83,48 @@ function initializeGame() {
   onWindowResize();
 
   loadProgress();
+  loadSettings();
 };
+
+function initializeRow(row) {
+  row.element.classList.add('letter-row');
+  
+  const word = row.element.textContent;
+  if (word) {
+    console.log(word);
+    row.element.textContent = null;
+  }
+
+  for (let j = 0; j < WORD_LENGTH; ++j) {
+    const cellElement = document.createElement('div');
+    cellElement.classList.add('letter-cell');
+
+    const contentElement = document.createElement('div');
+    contentElement.classList.add('content');
+    cellElement.append(contentElement);
+
+    const frameElement = document.createElement('div');
+    frameElement.classList.add('letter-frame');
+    contentElement.append(frameElement);
+
+    const committedElement = document.createElement('div');
+    committedElement.classList.add('committed-letter');
+    contentElement.append(committedElement);
+
+    if (word) {
+      frameElement.textContent = word[j];
+    }
+
+    const cell = {
+      element: cellElement,
+      frameElement: frameElement,
+      committedElement: committedElement,
+    }
+    
+    row.element.append(cell.element);
+    row.cells.push(cell);
+  }
+}
 
 function everySecond() {
   const millisLeft = solution.expiration - Date.now();
@@ -186,22 +217,20 @@ function commitCurrentAttempt() {
   progress.attempts[currentAttemptIndex] = word;
   saveProgress();
   
-  const attemptIndex = currentAttemptIndex;
   checkCurrentAttempt();
 
   const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
-  animateAttemptStatus(attemptIndex, callback);
+  animateAttemptStatus(row, callback);
 }
 
-function checkCurrentAttempt() {
-  const row = letterGrid.rows[currentAttemptIndex];
-  const solutionLetters = solution.word.split('');
+function checkRow(row, solutionWord) {
+  const solutionLetters = solutionWord.split('');
   let matchCount = 0;
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.frameElement.textContent;
-    if (letter ==  solution.word[j]) {
+    if (letter ==  solutionWord[j]) {
       cell.status = 'match';
       ++matchCount;
       solutionLetters.splice(solutionLetters.indexOf(letter), 1);
@@ -224,7 +253,13 @@ function checkCurrentAttempt() {
     }
   }
 
-  if (matchCount == WORD_LENGTH) {
+  return matchCount == WORD_LENGTH;
+}
+
+function checkCurrentAttempt() {
+  const match = checkRow(letterGrid.rows[currentAttemptIndex], solution.word);
+
+  if (match) {
     successfulAttemptIndex = currentAttemptIndex;
     currentAttemptIndex = ATTEMPT_COUNT;
   } else {
@@ -236,9 +271,7 @@ function checkCurrentAttempt() {
   }
 }
 
-function animateAttemptStatus(attemptIndex, callback, interval = 300) {
-  const row = letterGrid.rows[attemptIndex];
-
+function animateAttemptStatus(row, callback, interval = 300) {
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.frameElement.textContent;
@@ -281,12 +314,27 @@ function loadProgress() {
     }
     checkCurrentAttempt();
     const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
-    setTimeout(function () { animateAttemptStatus(i, callback, 50); }, i * 200);
+    setTimeout(function () { animateAttemptStatus(row, callback, 50); }, i * 200);
   }
 }
 
 function saveProgress() {
   localStorage.setItem('progress', JSON.stringify(progress));
+}
+
+function loadSettings() {
+  settings = localStorage.getItem('settings');
+  if (settings) {
+    settings = JSON.parse(settings);
+  } else {
+    settings = {}
+    saveSettings();
+    showAboutPopup();
+  }
+}
+
+function saveSettings() {
+  localStorage.setItem('settings', JSON.stringify(settings));
 }
 
 function loadSolution(callback) {
@@ -384,6 +432,12 @@ function showStatsPopup() {
     statsPopupSolutionElement.textContent += "Rozwiązanie: \"" + solution.word + "\"";
   }
   showPopup('stats');
+}
+
+function showAboutPopup() {
+  showPopup('about');
+  setTimeout(function () { animateAttemptStatus(exampleAttemptRow); }, 200);
+  setTimeout(function () { animateAttemptStatus(exampleSolutionRow); }, 800);
 }
 
 function statusPriority(status) {
