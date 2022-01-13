@@ -394,6 +394,36 @@ function getKeyboardKeyElement(letter) {
   return null;
 }
 
+function share() {
+  if (successfulAttemptIndex == null || successfulAttemptIndex < 0) {
+    return;
+  }
+  
+  let data = "Słowle " + solution.id + " "
+    + (successfulAttemptIndex + 1) + "/" +  ATTEMPT_COUNT + "\n";
+  for (let i = 0; i <= successfulAttemptIndex; ++i) {
+    const row = letterGrid.rows[i];
+    data += "\n";
+    for (let j = 0; j < WORD_LENGTH; ++j) {
+      const status = row.cells[j].status;
+      if (status == 'match') {
+        data += "🟩";
+      } else if (status == 'partial') {
+        data += "🟨";
+      } else {
+        data += "⬛";
+      }
+    }
+  }
+  
+  try {
+    navigator.share({text: data});
+  } catch (_) {
+    navigator.clipboard.writeText(data);
+    showToast("Skopiowano do schowka");
+  }
+}
+
 function showToast(message) {
   toastElement.children[0].textContent = message;
   toastElement.classList.add('visible');

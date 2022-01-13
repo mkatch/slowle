@@ -6,6 +6,9 @@ html, body {
 
 body {
   background-color: #161d21;
+}
+
+body, button {
   font-family: 'Open Sans', sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -281,8 +284,31 @@ h1 {
   display: none;
 }
 
+.countdown-share {
+  display: flex;
+  align-items: center;
+}
+
 .countdown {
   text-align: center;
+  border-right: 1px solid #879294;
+  padding-right: 20px;
+  margin-right: 20px;
+}
+
+.share-button {
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #2E7D32;
+}
+
+.share-button:hover {
+  background-color: #266829;
+}
+
+.share-button:active {
+  background-color: #1b491d;
 }
 
 #countdownElement {
