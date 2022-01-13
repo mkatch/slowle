@@ -133,7 +133,11 @@ function everySecond() {
   if (millisLeft <= 0) {
     location.reload();
   } else {
-    countdownElement.textContent = new Date(millisLeft).toTimeString().slice(0, 8);
+    const timeLeft = new Date(millisLeft);
+    countdownElement.textContent =
+      padZeros(timeLeft.getUTCHours(), 2) + ":" +
+      padZeros(timeLeft.getUTCMinutes(), 2) + ":" +
+      padZeros(timeLeft.getUTCSeconds(), 2);
   }
 }
 
@@ -472,6 +476,10 @@ function showAboutPopup() {
   showPopup('about');
   setTimeout(function () { animateAttemptStatus(exampleAttemptRow); }, 200);
   setTimeout(function () { animateAttemptStatus(exampleSolutionRow); }, 800);
+}
+
+function padZeros(value, length) {
+  return ('0'.repeat(length) + value).slice(-length);
 }
 
 function statusPriority(status) {
