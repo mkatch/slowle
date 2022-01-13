@@ -42,12 +42,14 @@ function initializeGame() {
   exampleAttemptRow = {
     element: exampleAttemptRowElement,
     cells: [],
+    isExample: true,
   }
   initializeRow(exampleAttemptRow);
   checkRow(exampleAttemptRow, exampleSolutionWord);
   exampleSolutionRow = {
     element: exampleSolutionRowElement,
     cells: [],
+    isExample: true,
   }
   initializeRow(exampleSolutionRow);
   checkRow(exampleSolutionRow, exampleSolutionWord);
@@ -279,11 +281,13 @@ function animateAttemptStatus(row, callback, interval = 300) {
 
     setTimeout(function () {
       cell.element.setAttribute('status', cell.status);
-      const keyElement = getKeyboardKeyElement(letter);
-      if (
-          statusPriority(cell.status) >
-          statusPriority(keyElement.getAttribute('status'))) {
-        keyElement.setAttribute('status', cell.status);
+      if (!row.isExample) {
+        const keyElement = getKeyboardKeyElement(letter);
+        if (
+            statusPriority(cell.status) >
+            statusPriority(keyElement.getAttribute('status'))) {
+          keyElement.setAttribute('status', cell.status);
+        }
       }
     }, j * interval);
   }
