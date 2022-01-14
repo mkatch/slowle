@@ -179,6 +179,7 @@ class Game {
   constructor() {
     this._currentAttemptIndex = 0;
     this._currentLetterIndex = 0;
+    this.outcome = null;
     this._updateCurrentCell();
   }
 
@@ -225,6 +226,44 @@ const KEYBOARD_ROWS = [
   ['OK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'backspace'],
   ['Ą', 'Ć', 'Ę', 'Ł', 'Ń', 'Ó', 'Ś', 'Ź', 'Ż'],
 ];
+const NOTE_6_PLUS = {
+  value: 7,
+  description: "celujący+",
+};
+const NOTE_6 = {
+  value: 6,
+  description: "celujący",
+};
+const NOTE_5 = {
+  value: 5,
+  description: "bardzo dobry",
+};
+const NOTE_4 = {
+  value: 4,
+  description: "dobry",
+};
+const NOTE_3 = {
+  value: 3,
+  description: "dostateczny",
+};
+const NOTE_2 = {
+  value: 2,
+  description: "dopuszczający",
+}
+const NOTE_1 = {
+  value: 1,
+  description: "niedostateczny",
+}
+const OUTCOME_NOTES = {
+  "1/6": NOTE_6_PLUS,
+  "2/6": NOTE_6_PLUS,
+  "3/6": NOTE_6,
+  "4/6": NOTE_5,
+  "5/6": NOTE_4,
+  "6/6": NOTE_3,
+  "X/6": NOTE_2,
+  "-/6": NOTE_2,
+};
 
 let game = null;
 let board = null;
@@ -233,6 +272,7 @@ let exampleSolutionBoard = null;
 const keyboardKeyElements = [];
 let successfulAttemptIndex = null;
 let solution = null;
+let history = null;
 let progress = null;
 
 window.onload = function () {
@@ -281,6 +321,7 @@ function initializeGame() {
   
   onWindowResize();
 
+  loadHistory();
   loadProgress();
   loadSettings();
 };
@@ -412,15 +453,30 @@ function checkCurrentAttempt() {
   const match = checkBoardRow(game.currentRow, solution.word);
 
   if (match) {
-    successfulAttemptIndex = game.currentAttemptIndex;
-    game.currentAttemptIndex = ATTEMPT_COUNT;
+    finishGame(true);
   } else {
     ++game.currentAttemptIndex;
     game.currentLetterIndex = 0;
     if (game.currentAttemptIndex >= ATTEMPT_COUNT) {
-      successfulAttemptIndex = -1;
+      finishGame(false);
     }
   }
+}
+
+function finishGame(success) {
+  if (success) {
+    successfulAttemptIndex = game.currentAttemptIndex;
+    game.currentAttemptIndex = ATTEMPT_COUNT;
+    game.outcome = (successfulAttemptIndex + 1) + "/" +  ATTEMPT_COUNT;
+  } else {
+    successfulAttemptIndex = -1;
+    game.outcome = "X/" + ATTEMPT_COUNT
+  }
+
+  shareButtonElement.removeAttribute('disabled');
+  
+  history[history.length - 1].o = game.outcome;
+  saveHistory();
 }
 
 function animateAttemptStatus(row, callback, interval = 250) {
@@ -532,6 +588,24 @@ function loadSolution(callback) {
   request.send(null);
 }
 
+function loadHistory() {
+  history = localStorage.getItem('history');
+  if (history) {
+    history = JSON.parse(history);
+  } else {
+    history = [];
+  }
+
+  if (history.length == 0 || history[history.length - 1].i != solution.id) {
+    history.push({ i: solution.id, o: "-/6" });
+    saveHistory();
+  }
+}
+
+function saveHistory() {
+  localStorage.setItem('history', JSON.stringify(history));
+}
+
 function getKeyboardKeyElement(letter) {
   for (let i = 0; i < keyboardKeyElements.length; ++i) {
     const element = keyboardKeyElements[i];
@@ -543,13 +617,15 @@ function getKeyboardKeyElement(letter) {
 }
 
 function share() {
-  if (successfulAttemptIndex == null || successfulAttemptIndex < 0) {
+  if (game.outcome == null) {
     return;
   }
   
-  let data = "Słowle " + solution.id + " "
-    + (successfulAttemptIndex + 1) + "/" +  ATTEMPT_COUNT + "\n";
-  for (let i = 0; i <= successfulAttemptIndex; ++i) {
+  let data = "Słowle " + solution.id + " " + game.outcome + "\n";
+  const printedRowCount = successfulAttemptIndex >= 0
+    ? successfulAttemptIndex + 1
+    : ATTEMPT_COUNT;
+  for (let i = 0; i < printedRowCount; ++i) {
     const row = board.rows[i];
     data += "\n";
     for (let j = 0; j < WORD_LENGTH; ++j) {
@@ -565,6 +641,7 @@ function share() {
   }
   
   try {
+    console.log(data);
     navigator.clipboard.writeText(data);
     showToast("Skopiowano do schowka");
   } catch (_) {
@@ -605,14 +682,77 @@ function hidePopup() {
 }
 
 function showStatsPopup() {
-  if (successfulAttemptIndex != null) {
+  let winCount = 0;
+  let concludedCount = 0;
+  let noteSum = 0;
+  let noteCount = 0;
+  let previousSolutionId = history[0].i - 1;
+  for (let k = 0; k < history.length; ++k) {
+    const entry = history[k];
+
+    const outcome = entry.o;
+    if (outcome[0] != '-' && outcome[0] != 'X') {
+      ++winCount;
+    }
+
+    if (k != history.length - 1 || game.outcome != null) {
+      noteSum += OUTCOME_NOTES[outcome].value;
+      ++noteCount;
+      ++concludedCount;
+    }
+
+    const solutionId = entry.i;
+    const skipCount = solutionId - previousSolutionId - 1;
+    previousSolutionId = solutionId;
+
+    const skipPenaltyCount = Math.min(skipCount, 5);
+    console.log(skipCount);
+    noteSum += skipPenaltyCount * NOTE_1.value;
+    noteCount += skipPenaltyCount;
+  }
+
+  if (game.outcome != null) {
     if (successfulAttemptIndex >= 0) {
-      statsPopupVerdictElement.textContent = "Brawo! Liczba ruchów: " + (successfulAttemptIndex + 1);
+      statsPopupVerdictElement.textContent =
+        "Brawo! Liczba prób: " + (successfulAttemptIndex + 1);
     } else {
       statsPopupVerdictElement.textContent = "Niestety nie udało się tym razem";
     }
-    statsPopupSolutionElement.textContent += "Rozwiązanie: \"" + solution.word + "\"";
+    statsPopupSolutionElement.textContent =
+      "Rozwiązanie: \"" + solution.word + "\"";
+
+    const note = OUTCOME_NOTES[game.outcome];
+    const normalizedNote = Math.min(note.value, 6);
+    noteSectionElement.setAttribute('note', normalizedNote);
+    noteValueElement.textContent = normalizedNote;
+    noteDescriptionElement.textContent = note.description;
+    if (normalizedNote != note.value) {
+      noteValueElement.classList.add('plus');
+    }
   }
+
+  playedCountElement.textContent = history.length;
+  if (history.length == 1) {
+    playedCountLabelElement.textContent = "gra"
+  } else {
+    const d = history.length % 10;
+    const dd = history.length % 100;
+    if ((10 <= dd && dd <= 21) || (d <= 1 || 5 <= d)) {
+      playedCountLabelElement.textContent = "gier"
+    } else {
+      playedCountLabelElement.textContent = "gry"
+    }
+  }
+
+  winPercentageElement.textContent =
+    Math.round(100 * winCount / Math.max(1, concludedCount)) + "%";
+
+  const noteAverage = (noteSum / Math.max(1, noteCount));
+  noteAverageElement.textContent = noteAverage.toFixed(2);
+  noteAverageElement.setAttribute(
+    'note',
+    Math.max(1, Math.min(6, Math.round(noteAverage))));
+
   showPopup('stats');
 }
 

@@ -7,8 +7,9 @@
     <link rel="icon" type="image/x-icon" href="favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">  
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
     <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="words.js"></script>
@@ -62,13 +63,49 @@
               <div id="statsPopupVerdictElement"></div>
               <div id="statsPopupSolutionElement"></div>
             </div>
+
+            <div id="noteSectionElement" class="note-section">
+              <h2>Ocena</h2>
+
+              <div class="note">
+                <div class="note-glyph">
+                  <svg class="note-circle" viewBox="20 20 470 450">
+                    <path d="M 476.469 238.626 C 476.469 297.665 456.422 354.108 416.679 392.602 C 376.979 431.054 312.468 455.369 251.797 455.369 C 191.126 455.369 133.51 428.123 93.81 389.671 C 54.067 351.177 31.331 301.827 31.331 242.788 C 31.331 183.749 51.709 132.225 91.452 93.731 C 131.152 55.279 188.508 28.184 249.179 28.184 C 309.85 28.184 369.666 49.429 409.366 87.881 C 449.109 126.375 476.469 179.587 476.469 238.626 Z M 388.983 108.818 C 353.334 74.29 303.51 58.606 249.204 58.606 C 194.898 58.606 148.399 81.433 112.75 115.961 C 77.146 150.447 64.271 190.228 64.271 242.553 C 64.271 294.878 82.634 331.142 118.238 365.628 C 153.887 400.156 197.491 423.369 251.797 423.369 C 306.103 423.369 358.767 404.145 394.416 369.617 C 430.02 335.131 444.469 290.951 444.469 238.626 C 444.469 186.301 424.587 143.304 388.983 108.818 Z"></path>
+                  </svg>
+                  <div id="noteValueElement" class="note-value"></div>
+                </div>
+                <span id="noteDescriptionElement"></span>
+              </div>
+            </div>
+
+            <h2>Statystyki</h2>
+            
+            <div class="stats">
+              <div class="entry">
+                <div class="value" id="playedCountElement"></div>
+                <div class="label" id="playedCountLabelElement"></div>
+              </div>
+              <div class="entry">
+                <div class="value" id="winPercentageElement"></div>
+                <div class="label">wygranych</div>
+              </div>
+              <div class="entry">
+                <div class="value" id="noteAverageElement"></div>
+                <div class="label">średnia&nbsp;ocen</div>
+              </div>
+            </div>
+            
             <div class="countdown-share">
               <div class="countdown">
-                Następny Słowle za:
+                Następne Słowle za:
                 <div id="countdownElement"></div>
               </div>
               <div class="share">
-                <button class="share-button" onclick="share()">
+                <button
+                    id="shareButtonElement"
+                    class="share-button"
+                    onclick="share()"
+                    disabled>
                   <span class="material-icons">content_copy</span>&nbsp;Udostępnij
                 </button>
               </div>

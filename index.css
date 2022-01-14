@@ -370,12 +370,142 @@ a {
 
 .stats-popup-message {
   text-align: center;
-  margin-top: 10px;
-  margin-bottom: 20px;
 }
 
-.stats-popup-message:empty {
+#statsPopupVerdictElement {
+  font-weight: bold;
+}
+
+.stats-popup h2 {
+  font-size: inherit;
+  font-weight: bold;
+  margin: 2em 0;
+  margin-bottom: 1.5em;
+  text-align: center;
+}
+
+.stats-popup .note-section:not([note]) {
   display: none;
+}
+
+.stats-popup [note='6'] .note,
+#noteAverageElement[note='6'] {
+  color: #FFFFFF;
+}
+
+.stats-popup [note='6'] .note-circle path {
+  fill: #FFFFFF;
+}
+
+.stats-popup [note='5'] .note,
+#noteAverageElement[note='5'] {
+  color: #2E7D32;
+}
+
+.stats-popup [note='5'] .note-circle path {
+  fill: #2E7D32;
+}
+
+.stats-popup [note='4'] .note,
+#noteAverageElement[note='4'] {
+  color: rgb(205, 220, 57);
+}
+
+.stats-popup [note='4'] .note-circle path {
+  fill: rgb(205, 220, 57);
+}
+
+.stats-popup [note='3'] .note,
+#noteAverageElement[note='3'] {
+  color: #FFC107;
+}
+
+.stats-popup [note='3'] .note-circle path {
+  fill: #FFC107;
+}
+
+.stats-popup [note='2'] .note,
+#noteAverageElement[note='2'] {
+  color: #E17619;
+}
+
+.stats-popup [note='2'] .note-circle path {
+  fill: #E17619;
+}
+
+.stats-popup [note='1'] .note,
+#noteAverageElement[note='1'] {
+  color: #FF5252;
+}
+
+.stats-popup [note='1'] .note-circle path {
+  fill: #FF5252;
+}
+
+.stats-popup .note {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1em;
+  font-size: 43px;
+  font-family: 'Patrick Hand', cursive;
+}
+
+.stats-popup .note-glyph {
+  position: relative;
+  width: 94px;
+  height: 90px;
+}
+
+.stats-popup .note-circle {
+  width: 100%;
+  height: 100%;
+}
+
+.stats-popup .note-value {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 90px;
+  line-height: 1em;
+  transform: translateY(-3px);
+}
+
+.stats-popup [note='1'] .note-value {
+  transform: translate(-5px, -4px);
+}
+
+.stats-popup [note='2'] .note-value {
+  transform: translateY(-5px);
+}
+
+.stats-popup .note-value.plus::after {
+  content: '+';
+  font-size: 60px;
+  margin-left: -7px;
+  margin-bottom: 13px;
+  width: 20px;
+}
+
+.stats-popup .stats {
+  display: flex;
+  margin: 2em 0;
+}
+
+.stats-popup .stats .entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 0 0;
+}
+
+.stats-popup .stats .value {
+  font-size: 2em;
 }
 
 .countdown-share {
@@ -397,6 +527,11 @@ a {
   border-radius: 5px;
   padding: 10px;
   background-color: #2E7D32;
+}
+
+.share-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .share-button:hover {
