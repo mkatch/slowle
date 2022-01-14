@@ -10,13 +10,17 @@ body {
 
 body, button {
   font-family: 'Open Sans', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   color: white;
 }
 
 p {
   margin: 1em 0;
+}
+
+p.no-margin-top {
+  margin-top: 0;
 }
 
 header {
@@ -117,6 +121,7 @@ h1 {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   transition: transform 1s;
 }
 
@@ -234,8 +239,9 @@ h1 {
   display: none;
 }
 
-.popup-overlay-content {
+.popup-container {
   display: flex;
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -243,6 +249,8 @@ h1 {
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+  padding: 10px;
+  overflow: hidden;
 }
 
 #popupCloseButtonElement {
@@ -266,12 +274,14 @@ h1 {
 
 .popup {
   position: relative;
-  margin: 10px;
+  box-sizing: border-box;
   background-color: #161d21;
   border: 1px solid #313a3c;
   border-radius: 10px;
   overflow-y: auto;
   padding: 30px;
+  padding-top: 40px;
+  max-height: 100%;
 }
 
 .stats-popup-message {
@@ -333,14 +343,15 @@ h1 {
 .about-popup .new-word {
   display: flex;
   align-items: center;
-  margin-top: 1em;
+  margin-top: 2em;
 }
 
 .about-popup .new-word p {
-  margin: 1em;
+  margin: 0 0.8em;
+  text-align: center;
 }
 
 .about-popup .new-word .line {
-  flex: 1;
+  flex: 1 1 20px;
   border-top: 1px solid #879294;
 }
