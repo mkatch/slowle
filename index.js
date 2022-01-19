@@ -8,7 +8,7 @@ const KEYBOARD_ROWS = [
 ];
 const WIDE_KEYS = ['ENTER', '⌫'];
 
-const letterGrid = {
+const board = {
   rows: [],
 }
 let exampleAttemptRow = null;
@@ -25,7 +25,7 @@ window.onload = function () {
 };
 
 function initializeGame() {
-  letterGrid.element = letterGridElement;
+  board.element = boardElement;
 
 	for (let i = 0; i < ATTEMPT_COUNT; ++i) {
   	const row = {
@@ -34,8 +34,8 @@ function initializeGame() {
     };
     initializeRow(row);
     
-    letterGrid.element.append(row.element);
-    letterGrid.rows.push(row);
+    board.element.append(row.element);
+    board.rows.push(row);
   }
 
   const exampleSolutionWord = exampleSolutionRowElement.textContent;
@@ -93,7 +93,6 @@ function initializeRow(row) {
   
   const word = row.element.textContent;
   if (word) {
-    console.log(word);
     row.element.textContent = null;
   }
 
@@ -142,16 +141,25 @@ function everySecond() {
 }
 
 function onWindowResize() {
-	const boardRect = boardElement.getBoundingClientRect();
-  const maxCellWidth = Math.floor(boardRect.width / WORD_LENGTH);
-  const maxCellHeight = Math.floor(boardRect.height / ATTEMPT_COUNT);
-  const cellSize = Math.min(maxCellWidth, maxCellHeight) + 'px';
-  for (let i = 0; i < ATTEMPT_COUNT; ++i) {
-  	const row = letterGrid.rows[i];
-  	for (let j = 0; j < WORD_LENGTH; ++j) {
-    	const cellElement = row.cells[j].element;
-      cellElement.style.width = cellSize;
-      cellElement.style.height = cellSize;
+	const sectionRect = boardSectionElement.getBoundingClientRect();
+  const maxCellWidth = Math.floor((sectionRect.width - 20) / WORD_LENGTH);
+  const maxCellHeight = Math.floor((sectionRect.height - 20) / ATTEMPT_COUNT);
+  const cellSize = Math.max(20, Math.min(maxCellWidth, maxCellHeight));
+  const inputTileBorderWidth = Math.round(0.05 * cellSize);
+  const cellPadding = Math.ceil(0.75 * inputTileBorderWidth);
+
+  const cellSizeStyle = cellSize + 'px';
+  const inputTileBorderWidthStyle = inputTileBorderWidth + 'px';
+  const cellPaddingStyle = cellPadding + 'px';
+
+  for (let i = 0; i < board.rows.length; ++i) {
+    const row = board.rows[i];
+    for (let j = 0; j < row.cells.length; ++j) {
+      const cell = row.cells[j];
+      cell.element.style.width = cellSizeStyle;
+      cell.element.style.height = cellSizeStyle;
+      cell.element.style.padding = cellPaddingStyle;
+      cell.frameElement.style.borderWidth = inputTileBorderWidthStyle;
     }
   }
 }
@@ -198,11 +206,11 @@ function onKey(key) {
   } else if (key == '⌫') {
     if (currentLetterIndex > 0) {
       --currentLetterIndex;
-  		const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
+  		const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
     	cell.frameElement.innerText = '';
     }
   } else if (currentLetterIndex < WORD_LENGTH) {
-  	const cell = letterGrid.rows[currentAttemptIndex].cells[currentLetterIndex];
+  	const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
   	cell.frameElement.innerText = key;
     ++currentLetterIndex;
   }
@@ -210,7 +218,7 @@ function onKey(key) {
 
 function commitCurrentAttempt() {
   let word = "";
-  const row = letterGrid.rows[currentAttemptIndex];
+  const row = board.rows[currentAttemptIndex];
   for (let j = 0; j < WORD_LENGTH; ++j) {
     word += row.cells[j].frameElement.textContent;
   }
@@ -263,7 +271,7 @@ function checkRow(row, solutionWord) {
 }
 
 function checkCurrentAttempt() {
-  const match = checkRow(letterGrid.rows[currentAttemptIndex], solution.word);
+  const match = checkRow(board.rows[currentAttemptIndex], solution.word);
 
   if (match) {
     successfulAttemptIndex = currentAttemptIndex;
@@ -315,7 +323,7 @@ function loadProgress() {
   }
 
   for (let i = 0; i < progress.attempts.length; ++i) {
-    const row = letterGrid.rows[i];
+    const row = board.rows[i];
     const word = progress.attempts[i];
     for (let j = 0; j < WORD_LENGTH; ++j) {
       row.cells[j].frameElement.textContent = word[j];
@@ -406,7 +414,7 @@ function share() {
   let data = "Słowle " + solution.id + " "
     + (successfulAttemptIndex + 1) + "/" +  ATTEMPT_COUNT + "\n";
   for (let i = 0; i <= successfulAttemptIndex; ++i) {
-    const row = letterGrid.rows[i];
+    const row = board.rows[i];
     data += "\n";
     for (let j = 0; j < WORD_LENGTH; ++j) {
       const status = row.cells[j].status;
@@ -493,3 +501,4 @@ function statusPriority(status) {
     return 0;
   }
 }
+
