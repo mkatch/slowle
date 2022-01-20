@@ -329,7 +329,7 @@ function animateAttemptStatus(row, callback, interval = 300) {
     setTimeout(function () {
       cell.inputTileElement.classList.add('committed');
       cell.statusTileElement.setAttribute('status', cell.status);
-      if (!row.isExample) {
+      if (!row.board.isExample) {
         const keyElement = getKeyboardKeyElement(letter);
         if (
             statusPriority(cell.status) >
