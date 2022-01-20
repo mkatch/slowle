@@ -79,71 +79,100 @@ h1 {
   margin-right: auto;
 }
 
-#boardSectionElement {
+.board-section {
   flex: 1 1 0;
   min-height: 0;
+  overflow: auto;
+  padding: 15px;
+}
+
+.board-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
 }
 
-#boardElement {
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.letter-row {
-  display: flex;
-}
-
-.letter-cell {
-  box-sizing: border-box;
-}
-
-.letter-cell .content {
-  position: relative;
-  width: 100%;
+#boardContainerElement {
   height: 100%;
 }
 
-.letter-frame, .committed-letter {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.board {
+  display: grid;
+  font-weight: 700;
+}
+
+.board .tile {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition: transform 1s;
 }
 
-.letter-frame {
-  box-sizing: border-box;
-  border-style: solid;
-  border-color: #313a3c;
+.board .letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-[status] .letter-frame {
+.board .input.tile {
+  position: relative;
+  background-color: #313a3c;
+}
+
+.board .input.tile .letter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.board .input.tile .empty-background,
+.board .input.tile .empty-cover  {
+  background-color: #161d21;
+}
+
+.board .input.tile .empty-background {
+  width: 100%;
+  height: 100%;
+}
+
+.board .input.tile:not(.empty) .empty-background {
+  visibility: hidden;
+}
+
+.board .input.tile .empty-cover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  transition: bottom 100ms;
+}
+
+.board .input.tile.empty .empty-cover {
+  bottom: 20%;
+}
+
+.board .input.tile:not(.empty) .empty-cover {
+  bottom: 100%;
+}
+
+.board .input.tile.committed {
   transform: rotateX(180deg);
 }
 
-.letter-cell:not([status]) .committed-letter {
+.board .status.tile:not([status]){
   transform: rotateX(-180deg);
 }
 
-[status=match] .committed-letter {
+.board .status.tile[status=match] {
   background-color: #2E7D32;
 }
 
-[status=partial] .committed-letter {
+.board .status.tile[status=partial] {
   background-color: #e5d456;
 }
 
-[status=miss] .committed-letter {
+.board .status.tile[status=miss] {
   background-color: #313a3c;
 }
 
@@ -328,12 +357,8 @@ h1 {
   text-decoration: underline;
 }
 
-.about-popup .letter-cell {
-  width: 40px;
-  height: 40px;
-}
-
-.about-popup .letter-row {
+.about-popup .example {
+  height: 3.5em;
   justify-content: center;
 }
 

@@ -1,3 +1,121 @@
+class BoardCell {
+  constructor(row, columnIndex) {
+    const gridArea =  (row.index + 1) + " / " + (columnIndex + 1);
+
+    this.inputTileElement = document.createElement('div');
+    this.inputTileElement.classList.add('input', 'tile', 'empty');
+    this.inputTileElement.style.gridArea = gridArea;
+
+    this.inputTileEmptyBackgroundElement = document.createElement('div');
+    this.inputTileEmptyBackgroundElement.classList.add('empty-background');
+    this.inputTileElement.append(this.inputTileEmptyBackgroundElement);
+
+    this.inputTileEmptyCoverElement = document.createElement('div');
+    this.inputTileEmptyCoverElement.classList.add('empty-cover');
+    this.inputTileElement.append(this.inputTileEmptyCoverElement);
+
+    this.inputElement = document.createElement('div');
+    this.inputElement.classList.add('letter');
+    this.inputTileElement.append(this.inputElement);
+
+    this.statusTileElement = document.createElement('div');
+    this.statusTileElement.classList.add('status', 'tile', 'letter');
+    this.statusTileElement.style.gridArea = gridArea;
+
+    this._letter = null;
+
+    row.board.element.append(this.inputTileElement, this.statusTileElement);
+  }
+
+  get letter() { return this._letter; }
+
+  set letter(value) {
+    if (value) {
+      this._letter = value;
+      this.inputElement.textContent = value;
+      this.statusTileElement.textContent = value;
+      this.inputTileElement.classList.remove('empty');
+    } else {
+      this._letter = null;
+      this.inputElement.textContent = "";
+      this.statusTileElement.textContent = "";
+      this.inputTileElement.classList.add('empty');
+    }
+  }
+}
+
+class BoardRow {
+  constructor(board, index) {
+    this.board = board;
+    this.index = index;
+
+    this.cells = [];
+    for (let j = 0; j < this.board.columnCount; ++j) {
+      this.cells.push(new BoardCell(this, j));
+    }
+  }
+}
+
+class Board {
+  constructor(containerElement, columnCount, rowCount) {
+    this.containerElement = containerElement;
+    this.columnCount = columnCount;
+    this.rowCount = rowCount;
+
+    this.element = document.createElement('div');
+    this.element.classList.add('board');
+    this.containerElement.append(this.element);
+
+    this.rows = [];
+    for (let i = 0; i < this.rowCount; ++i) {
+      this.rows.push(new BoardRow(this, i));
+    }
+  }
+
+  static example(containerElement) {
+    const word = containerElement.textContent;
+    containerElement.textContent = "";
+    const board = new Board(containerElement, word.length, 1);
+    for (let j = 0; j < word.length; ++j) {
+      board.rows[0].cells[j].letter = word[j];
+    }
+    board.isExample = true;
+    board.word = word;
+    return board;
+  }
+
+  layOut() {
+    const rect = this.containerElement.getBoundingClientRect();
+
+    // "Step" is the grid cell size together with the gap. For simplicity of
+    // computation we assume there is as many gaps as there are cells, although
+    // in reality it's one less.
+    const maxStepX = Math.floor(rect.width / this.columnCount);
+    const maxStepY = Math.floor(rect.height / this.rowCount);
+    const step = Math.max(20, Math.min(maxStepX, maxStepY));
+
+    const gap = Math.ceil(0.075 * step);
+    const tileSize = step - gap;
+    const fontSize = Math.round(tileSize / 3);
+    this.element.style.gridTemplateColumns =
+      (tileSize + 'px ').repeat(this.columnCount).slice(0, -1);
+    this.element.style.gridTemplateRows =
+      (tileSize + 'px ').repeat(this.rowCount).slice(0, -1);
+    this.element.style.gap = gap + "px";
+    this.element.style.fontSize = fontSize + "px";
+
+    const inputTileBorderWidth = Math.round(0.05 * step);
+    const inputTileBorderWidthStyle = inputTileBorderWidth + 'px';
+    for (let i = 0; i < this.rows.length; ++i) {
+      const row = this.rows[i];
+      for (let j = 0; j < row.cells.length; ++j) {
+        const cell = row.cells[j];
+        cell.inputTileElement.style.padding = inputTileBorderWidthStyle;
+      }
+    }
+  }
+}
+
 const WORD_LENGTH = 5;
 const ATTEMPT_COUNT = 6;
 const KEYBOARD_ROWS = [
@@ -8,11 +126,9 @@ const KEYBOARD_ROWS = [
 ];
 const WIDE_KEYS = ['ENTER', '⌫'];
 
-const board = {
-  rows: [],
-}
-let exampleAttemptRow = null;
-let exampleSolutionRow = null;
+let board = null;
+let exampleAttemptBoard = null;
+let exampleSolutionBoard = null;
 const keyboardKeyElements = [];
 let successfulAttemptIndex = null;
 let currentAttemptIndex = 0;
@@ -25,34 +141,12 @@ window.onload = function () {
 };
 
 function initializeGame() {
-  board.element = boardElement;
+  board = new Board(boardContainerElement, WORD_LENGTH, ATTEMPT_COUNT);
 
-	for (let i = 0; i < ATTEMPT_COUNT; ++i) {
-  	const row = {
-    	element: document.createElement('div'),
-      cells: [],
-    };
-    initializeRow(row);
-    
-    board.element.append(row.element);
-    board.rows.push(row);
-  }
-
-  const exampleSolutionWord = exampleSolutionRowElement.textContent;
-  exampleAttemptRow = {
-    element: exampleAttemptRowElement,
-    cells: [],
-    isExample: true,
-  }
-  initializeRow(exampleAttemptRow);
-  checkRow(exampleAttemptRow, exampleSolutionWord);
-  exampleSolutionRow = {
-    element: exampleSolutionRowElement,
-    cells: [],
-    isExample: true,
-  }
-  initializeRow(exampleSolutionRow);
-  checkRow(exampleSolutionRow, exampleSolutionWord);
+  exampleAttemptBoard = Board.example(exampleAttemptBoardContainerElement);
+  exampleSolutionBoard = Board.example(exampleSolutionBoardContainerElement);
+  checkBoardRow(exampleAttemptBoard.rows[0], exampleSolutionBoard.word);
+  checkBoardRow(exampleSolutionBoard.rows[0], exampleSolutionBoard.word);
   
   for (let i = 0; i < KEYBOARD_ROWS.length; ++i) {
   	const keyboardRow = KEYBOARD_ROWS[i];
@@ -88,45 +182,6 @@ function initializeGame() {
   loadSettings();
 };
 
-function initializeRow(row) {
-  row.element.classList.add('letter-row');
-  
-  const word = row.element.textContent;
-  if (word) {
-    row.element.textContent = null;
-  }
-
-  for (let j = 0; j < WORD_LENGTH; ++j) {
-    const cellElement = document.createElement('div');
-    cellElement.classList.add('letter-cell');
-
-    const contentElement = document.createElement('div');
-    contentElement.classList.add('content');
-    cellElement.append(contentElement);
-
-    const frameElement = document.createElement('div');
-    frameElement.classList.add('letter-frame');
-    contentElement.append(frameElement);
-
-    const committedElement = document.createElement('div');
-    committedElement.classList.add('committed-letter');
-    contentElement.append(committedElement);
-
-    if (word) {
-      frameElement.textContent = word[j];
-    }
-
-    const cell = {
-      element: cellElement,
-      frameElement: frameElement,
-      committedElement: committedElement,
-    }
-    
-    row.element.append(cell.element);
-    row.cells.push(cell);
-  }
-}
-
 function everySecond() {
   const millisLeft = solution.expiration - Date.now();
   if (millisLeft <= 0) {
@@ -141,27 +196,9 @@ function everySecond() {
 }
 
 function onWindowResize() {
-	const sectionRect = boardSectionElement.getBoundingClientRect();
-  const maxCellWidth = Math.floor((sectionRect.width - 20) / WORD_LENGTH);
-  const maxCellHeight = Math.floor((sectionRect.height - 20) / ATTEMPT_COUNT);
-  const cellSize = Math.max(20, Math.min(maxCellWidth, maxCellHeight));
-  const inputTileBorderWidth = Math.round(0.05 * cellSize);
-  const cellPadding = Math.ceil(0.75 * inputTileBorderWidth);
-
-  const cellSizeStyle = cellSize + 'px';
-  const inputTileBorderWidthStyle = inputTileBorderWidth + 'px';
-  const cellPaddingStyle = cellPadding + 'px';
-
-  for (let i = 0; i < board.rows.length; ++i) {
-    const row = board.rows[i];
-    for (let j = 0; j < row.cells.length; ++j) {
-      const cell = row.cells[j];
-      cell.element.style.width = cellSizeStyle;
-      cell.element.style.height = cellSizeStyle;
-      cell.element.style.padding = cellPaddingStyle;
-      cell.frameElement.style.borderWidth = inputTileBorderWidthStyle;
-    }
-  }
+  board.layOut();
+  exampleAttemptBoard.layOut();
+  exampleSolutionBoard.layOut();
 }
 
 function onWindowKeyDown(e) {
@@ -207,11 +244,11 @@ function onKey(key) {
     if (currentLetterIndex > 0) {
       --currentLetterIndex;
   		const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
-    	cell.frameElement.innerText = '';
+    	cell.letter = null;
     }
   } else if (currentLetterIndex < WORD_LENGTH) {
   	const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
-  	cell.frameElement.innerText = key;
+  	cell.letter = key;
     ++currentLetterIndex;
   }
 }
@@ -220,7 +257,7 @@ function commitCurrentAttempt() {
   let word = "";
   const row = board.rows[currentAttemptIndex];
   for (let j = 0; j < WORD_LENGTH; ++j) {
-    word += row.cells[j].frameElement.textContent;
+    word += row.cells[j].letter;
   }
 
   if (!WORDS.includes(word)) {
@@ -237,14 +274,14 @@ function commitCurrentAttempt() {
   animateAttemptStatus(row, callback);
 }
 
-function checkRow(row, solutionWord) {
+function checkBoardRow(row, solutionWord) {
   const solutionLetters = solutionWord.split('');
   let matchCount = 0;
 
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
-    const letter = cell.frameElement.textContent;
-    if (letter ==  solutionWord[j]) {
+    const letter = cell.letter;
+    if (letter == solutionWord[j]) {
       cell.status = 'match';
       ++matchCount;
       solutionLetters.splice(solutionLetters.indexOf(letter), 1);
@@ -258,7 +295,7 @@ function checkRow(row, solutionWord) {
     if (cell.status) {
       continue;
     }
-    const letter = cell.frameElement.textContent;
+    const letter = cell.letter;
     if (solutionLetters.includes(letter)) {
       cell.status = 'partial';
       solutionLetters.splice(solutionLetters.indexOf(letter), 1);
@@ -271,7 +308,7 @@ function checkRow(row, solutionWord) {
 }
 
 function checkCurrentAttempt() {
-  const match = checkRow(board.rows[currentAttemptIndex], solution.word);
+  const match = checkBoardRow(board.rows[currentAttemptIndex], solution.word);
 
   if (match) {
     successfulAttemptIndex = currentAttemptIndex;
@@ -288,11 +325,10 @@ function checkCurrentAttempt() {
 function animateAttemptStatus(row, callback, interval = 300) {
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
-    const letter = cell.frameElement.textContent;
-    cell.committedElement.textContent = letter;
-
+    const letter = cell.letter;
     setTimeout(function () {
-      cell.element.setAttribute('status', cell.status);
+      cell.inputTileElement.classList.add('committed');
+      cell.statusTileElement.setAttribute('status', cell.status);
       if (!row.isExample) {
         const keyElement = getKeyboardKeyElement(letter);
         if (
@@ -326,7 +362,7 @@ function loadProgress() {
     const row = board.rows[i];
     const word = progress.attempts[i];
     for (let j = 0; j < WORD_LENGTH; ++j) {
-      row.cells[j].frameElement.textContent = word[j];
+      row.cells[j].letter = word[j];
     }
     checkCurrentAttempt();
     const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
@@ -482,8 +518,10 @@ function showStatsPopup() {
 
 function showAboutPopup() {
   showPopup('about');
-  setTimeout(function () { animateAttemptStatus(exampleAttemptRow); }, 200);
-  setTimeout(function () { animateAttemptStatus(exampleSolutionRow); }, 800);
+  exampleAttemptBoard.layOut();
+  exampleSolutionBoard.layOut();
+  setTimeout(function () { animateAttemptStatus(exampleAttemptBoard.rows[0]); }, 200);
+  setTimeout(function () { animateAttemptStatus(exampleSolutionBoard.rows[0]); }, 800);
 }
 
 function padZeros(value, length) {
