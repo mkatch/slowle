@@ -99,69 +99,66 @@ h1 {
 .board {
   display: grid;
   font-weight: 700;
+  perspective: 800px;
 }
 
 .board .tile {
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transition: transform 1s;
-}
-
-.board .letter {
   display: flex;
   align-items: center;
   justify-content: center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-origin: inherit;
+  transition: transform 300ms, opacity 300ms;
+  transition-timing-function: cubic-bezier(.67, 1.76, .16, .55);
 }
 
 .board .input.tile {
   position: relative;
-  background-color: #313a3c;
 }
 
-.board .input.tile .letter {
+.board .input.tile .border {
   position: absolute;
+  border-color: #313a3c;
+}
+
+.board .input.tile .lower.border {
   left: 0;
   top: 0;
   right: 0;
   bottom: 0;
+  border-style: solid;
+  border-top-style: none;
+  transition: top 100ms;
 }
 
-.board .input.tile .empty-background,
-.board .input.tile .empty-cover  {
-  background-color: #161d21;
+.board .input.tile.empty .lower.border {
+  top: 80%;
+  border-top-width: 0;
 }
 
-.board .input.tile .empty-background {
-  width: 100%;
-  height: 100%;
-}
-
-.board .input.tile:not(.empty) .empty-background {
-  visibility: hidden;
-}
-
-.board .input.tile .empty-cover {
-  position: absolute;
+.board .input.tile .top.border {
   left: 0;
-  right: 0;
+  width: 100%;
   top: 0;
-  transition: bottom 100ms;
+  bottom: 0;
+  border-top-style: solid;
+  transition: left 100ms, width 100ms;
 }
 
-.board .input.tile.empty .empty-cover {
-  bottom: 20%;
-}
-
-.board .input.tile:not(.empty) .empty-cover {
-  bottom: 100%;
+.board .input.tile.empty .top.border {
+  left: 50%;
+  width: 0;
 }
 
 .board .input.tile.committed {
-  transform: rotateX(180deg);
+  transform: rotateX(-90deg);
+  opacity: 0;
 }
 
 .board .status.tile:not([status]){
-  transform: rotateX(-180deg);
+  transform: rotateX(90deg);
+  opacity: 0;
 }
 
 .board .status.tile[status=match] {

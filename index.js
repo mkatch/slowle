@@ -6,25 +6,22 @@ class BoardCell {
     this.inputTileElement.classList.add('input', 'tile', 'empty');
     this.inputTileElement.style.gridArea = gridArea;
 
-    this.inputTileEmptyBackgroundElement = document.createElement('div');
-    this.inputTileEmptyBackgroundElement.classList.add('empty-background');
-    this.inputTileElement.append(this.inputTileEmptyBackgroundElement);
-
-    this.inputTileEmptyCoverElement = document.createElement('div');
-    this.inputTileEmptyCoverElement.classList.add('empty-cover');
-    this.inputTileElement.append(this.inputTileEmptyCoverElement);
-
-    this.inputElement = document.createElement('div');
-    this.inputElement.classList.add('letter');
+    this.inputElement = document.createElement('span');
     this.inputTileElement.append(this.inputElement);
 
+    this.inputTileLowerBorderElement = document.createElement('div');
+    this.inputTileLowerBorderElement.classList.add('lower', 'border');
+    this.inputTileElement.append(this.inputTileLowerBorderElement);
+
+    this.inputTileTopBorderElement = document.createElement('div');
+    this.inputTileTopBorderElement.classList.add('top', 'border');
+    this.inputTileElement.append(this.inputTileTopBorderElement);
+
     this.statusTileElement = document.createElement('div');
-    this.statusTileElement.classList.add('status', 'tile', 'letter');
+    this.statusTileElement.classList.add('status', 'tile');
     this.statusTileElement.style.gridArea = gridArea;
 
     this._letter = null;
-
-    row.board.element.append(this.inputTileElement, this.statusTileElement);
   }
 
   get letter() { return this._letter; }
@@ -70,6 +67,20 @@ class Board {
     for (let i = 0; i < this.rowCount; ++i) {
       this.rows.push(new BoardRow(this, i));
     }
+
+    const appendRowElements = (i) => {
+      const row = this.rows[i];
+      for (let j = 0; j < row.cells.length; ++j) {
+        const cell = row.cells[j];
+        this.element.append(cell.inputTileElement, cell.statusTileElement);
+      }
+    }
+    for (let i0 = 0, i1 = this.rowCount - 1; i0 <= i1; ++i0, --i1) {
+      appendRowElements(i0);
+      if (i0 != i1) {
+        appendRowElements(i1);
+      }
+    }
   }
 
   static example(containerElement) {
@@ -94,7 +105,7 @@ class Board {
     const maxStepY = Math.floor(rect.height / this.rowCount);
     const step = Math.max(20, Math.min(maxStepX, maxStepY));
 
-    const gap = Math.ceil(0.075 * step);
+    const gap = Math.ceil(0.1 * step);
     const tileSize = step - gap;
     const fontSize = Math.round(tileSize / 3);
     this.element.style.gridTemplateColumns =
@@ -102,6 +113,7 @@ class Board {
     this.element.style.gridTemplateRows =
       (tileSize + 'px ').repeat(this.rowCount).slice(0, -1);
     this.element.style.gap = gap + "px";
+    this.element.style.transformOrigin = "center center -" + (tileSize / 2) + "px";
     this.element.style.fontSize = fontSize + "px";
 
     const inputTileBorderWidth = Math.round(0.05 * step);
@@ -110,7 +122,10 @@ class Board {
       const row = this.rows[i];
       for (let j = 0; j < row.cells.length; ++j) {
         const cell = row.cells[j];
-        cell.inputTileElement.style.padding = inputTileBorderWidthStyle;
+        cell.inputTileLowerBorderElement.style.borderWidth =
+          inputTileBorderWidthStyle;
+        cell.inputTileTopBorderElement.style.borderWidth =
+          inputTileBorderWidthStyle;
       }
     }
   }
@@ -322,7 +337,7 @@ function checkCurrentAttempt() {
   }
 }
 
-function animateAttemptStatus(row, callback, interval = 300) {
+function animateAttemptStatus(row, callback, interval = 250) {
   for (let j = 0; j < WORD_LENGTH; ++j) {
     const cell = row.cells[j];
     const letter = cell.letter;
