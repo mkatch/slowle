@@ -96,6 +96,12 @@ h1 {
   height: 100%;
 }
 
+.board, #keyboardElement {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
 .board {
   display: grid;
   font-weight: 700;
