@@ -46,6 +46,14 @@ class BoardCell {
     }
   }
 
+  set isCurrent(value) {
+    if (value) {
+      this.element.classList.add('current');
+    } else {
+      this.element.classList.remove('current');
+    }
+  }
+
   get hasCommittedStyle() { return this.element.hasAttribute('status'); }
 
   set layout(value) {
@@ -167,6 +175,48 @@ class Board {
   }
 }
 
+class Game {
+  constructor() {
+    this._currentAttemptIndex = 0;
+    this._currentLetterIndex = 0;
+    this._updateCurrentCell();
+  }
+
+  get currentAttemptIndex() { return this._currentAttemptIndex; }
+
+  set currentAttemptIndex(value) {
+    this._currentAttemptIndex = value;
+    this._updateCurrentCell();
+  }
+
+  get currentLetterIndex() { return this._currentLetterIndex; }
+
+  set currentLetterIndex(value) {
+    this._currentLetterIndex = value;
+    this._updateCurrentCell();
+  }
+
+  get currentRow() { return this._currentRow; }
+
+  get currentCell() { return this._currentCell; }
+
+  _updateCurrentCell() {
+    const row = board.rows[this.currentAttemptIndex];
+    const cell = row ? row.cells[this.currentLetterIndex] : null;
+    if (this._currentCell === cell) {
+      return;
+    }
+    if (this._currentCell) {
+      this._currentCell.isCurrent = false;
+    }
+    if (cell) {
+      cell.isCurrent = true;
+    }
+    this._currentRow = row;
+    this._currentCell = cell;
+  }
+}
+
 const WORD_LENGTH = 5;
 const ATTEMPT_COUNT = 6;
 const KEYBOARD_ROWS = [
@@ -177,13 +227,12 @@ const KEYBOARD_ROWS = [
 ];
 const WIDE_KEYS = ['ENTER', '⌫'];
 
+let game = null;
 let board = null;
 let exampleAttemptBoard = null;
 let exampleSolutionBoard = null;
 const keyboardKeyElements = [];
 let successfulAttemptIndex = null;
-let currentAttemptIndex = 0;
-let currentLetterIndex = 0;
 let solution = null;
 let progress = null;
 
@@ -193,6 +242,7 @@ window.onload = function () {
 
 function initializeGame() {
   board = new Board(boardContainerElement, WORD_LENGTH, ATTEMPT_COUNT);
+  game = new Game();
 
   exampleAttemptBoard = Board.example(exampleAttemptBoardContainerElement);
   exampleSolutionBoard = Board.example(exampleSolutionBoardContainerElement);
@@ -267,7 +317,7 @@ function onKeyClick(e) {
 }
 
 function onKey(key) {
-	if (currentAttemptIndex >= ATTEMPT_COUNT) {
+	if (!game.currentRow) {
   	return;
   }
   if (popupOverlayElement.hasAttribute('which')) {
@@ -286,27 +336,25 @@ function onKey(key) {
   }
   
   if (key == 'ENTER') {
-  	if (currentLetterIndex == WORD_LENGTH) {
+  	if (game.currentLetterIndex == WORD_LENGTH) {
     	commitCurrentAttempt();
     } else {
       showToast('Wpisz 5-literowe słowo');
     }
   } else if (key == '⌫') {
-    if (currentLetterIndex > 0) {
-      --currentLetterIndex;
-  		const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
-    	cell.letter = null;
+    if (game.currentLetterIndex > 0) {
+      --game.currentLetterIndex;
+      game.currentCell.letter = null;
     }
-  } else if (currentLetterIndex < WORD_LENGTH) {
-  	const cell = board.rows[currentAttemptIndex].cells[currentLetterIndex];
-  	cell.letter = key;
-    ++currentLetterIndex;
+  } else if (game.currentLetterIndex < WORD_LENGTH) {
+    game.currentCell.letter = key;
+    ++game.currentLetterIndex;
   }
 }
 
 function commitCurrentAttempt() {
   let word = "";
-  const row = board.rows[currentAttemptIndex];
+  const row = game.currentRow;
   for (let j = 0; j < WORD_LENGTH; ++j) {
     word += row.cells[j].letter;
   }
@@ -316,7 +364,7 @@ function commitCurrentAttempt() {
     return null;
   }
 
-  progress.attempts[currentAttemptIndex] = word;
+  progress.attempts[game.currentAttemptIndex] = word;
   saveProgress();
   
   checkCurrentAttempt();
@@ -359,15 +407,15 @@ function checkBoardRow(row, solutionWord) {
 }
 
 function checkCurrentAttempt() {
-  const match = checkBoardRow(board.rows[currentAttemptIndex], solution.word);
+  const match = checkBoardRow(game.currentRow, solution.word);
 
   if (match) {
-    successfulAttemptIndex = currentAttemptIndex;
-    currentAttemptIndex = ATTEMPT_COUNT;
+    successfulAttemptIndex = game.currentAttemptIndex;
+    game.currentAttemptIndex = ATTEMPT_COUNT;
   } else {
-    ++currentAttemptIndex;
-    currentLetterIndex = 0;
-    if (currentAttemptIndex >= ATTEMPT_COUNT) {
+    ++game.currentAttemptIndex;
+    game.currentLetterIndex = 0;
+    if (game.currentAttemptIndex >= ATTEMPT_COUNT) {
       successfulAttemptIndex = -1;
     }
   }
