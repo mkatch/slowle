@@ -553,9 +553,9 @@ function share() {
     for (let j = 0; j < WORD_LENGTH; ++j) {
       const status = row.cells[j].status;
       if (status == 'match') {
-        data += "🟩";
+        data += "🟦";
       } else if (status == 'partial') {
-        data += "🟨";
+        data += "🟧";
       } else {
         data += "⬛";
       }
