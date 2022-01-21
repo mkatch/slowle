@@ -1,10 +1,16 @@
 class BoardCell {
   constructor(row, columnIndex) {
-    const gridArea =  (row.index + 1) + " / " + (columnIndex + 1);
+    this.element = document.createElement('div');
+    this.element.classList.add('cell', 'hehe');
+    this.element.style.gridArea = (row.index + 1) + " / " + (columnIndex + 1);
+
+    this.frontFaceElement = document.createElement('div');
+    this.frontFaceElement.classList.add('front-face');
+    this.element.append(this.frontFaceElement);
 
     this.inputTileElement = document.createElement('div');
-    this.inputTileElement.classList.add('input', 'tile', 'empty');
-    this.inputTileElement.style.gridArea = gridArea;
+    this.inputTileElement.classList.add('input', 'tile');
+    this.frontFaceElement.append(this.inputTileElement);
 
     this.inputElement = document.createElement('span');
     this.inputTileElement.append(this.inputElement);
@@ -19,9 +25,9 @@ class BoardCell {
 
     this.statusTileElement = document.createElement('div');
     this.statusTileElement.classList.add('status', 'tile');
-    this.statusTileElement.style.gridArea = gridArea;
+    this.frontFaceElement.append(this.statusTileElement);
 
-    this._letter = null;
+    this.letter = null;
   }
 
   get letter() { return this._letter; }
@@ -29,15 +35,51 @@ class BoardCell {
   set letter(value) {
     if (value) {
       this._letter = value;
+      this.element.classList.remove('empty');
       this.inputElement.textContent = value;
       this.statusTileElement.textContent = value;
-      this.inputTileElement.classList.remove('empty');
     } else {
       this._letter = null;
+      this.element.classList.add('empty');
       this.inputElement.textContent = "";
       this.statusTileElement.textContent = "";
-      this.inputTileElement.classList.add('empty');
     }
+  }
+
+  get hasCommittedStyle() { return this.element.hasAttribute('status'); }
+
+  set layout(value) {
+    this._layout = value;
+    this.inputTileLowerBorderElement.style.borderWidth =
+      value.inputTileBorderWidthStyle;
+    this.inputTileTopBorderElement.style.borderWidth =
+      value.inputTileBorderWidthStyle;
+    this.frontFaceElement.style.transform = value.frontFaceTransformStyle;
+    this._applyConditionalLayout();
+  }
+
+  applyCommittedStyle() {
+    this.element.setAttribute('status', this.status);
+    this._applyConditionalLayout();
+  }
+
+  _applyConditionalLayout() {
+    if (this.hasCommittedStyle) {
+      this.element.style.transform = this._layout.committedTransformStyle;
+    } else {
+      this.element.style.transform = this._layout.pendingTransformStyle;
+    }
+  }
+
+  static computeLayout(size) {
+    const halfSizeStyle = (size / 2) + "px";
+    return {
+      inputTileBorderWidthStyle: Math.round(0.05 * size) + 'px',
+      pendingTransformStyle: "translateZ(-" + halfSizeStyle + ") rotateX(0)",
+      committedTransformStyle:
+        "translateZ(-" + halfSizeStyle + ") rotateX(-90deg)",
+      frontFaceTransformStyle: "translateZ(" + halfSizeStyle + ")",
+    };
   }
 }
 
@@ -71,8 +113,7 @@ class Board {
     const appendRowElements = (i) => {
       const row = this.rows[i];
       for (let j = 0; j < row.cells.length; ++j) {
-        const cell = row.cells[j];
-        this.element.append(cell.inputTileElement, cell.statusTileElement);
+        this.element.append(row.cells[j].element);
       }
     }
     for (let i0 = 0, i1 = this.rowCount - 1; i0 <= i1; ++i0, --i1) {
@@ -106,26 +147,21 @@ class Board {
     const step = Math.max(20, Math.min(maxStepX, maxStepY));
 
     const gap = Math.ceil(0.1 * step);
-    const tileSize = step - gap;
-    const fontSize = Math.round(tileSize / 3);
+    const cellSize = step - gap;
     this.element.style.gridTemplateColumns =
-      (tileSize + 'px ').repeat(this.columnCount).slice(0, -1);
+      (cellSize + 'px ').repeat(this.columnCount).slice(0, -1);
     this.element.style.gridTemplateRows =
-      (tileSize + 'px ').repeat(this.rowCount).slice(0, -1);
+      (cellSize + 'px ').repeat(this.rowCount).slice(0, -1);
     this.element.style.gap = gap + "px";
-    this.element.style.transformOrigin = "center center -" + (tileSize / 2) + "px";
-    this.element.style.fontSize = fontSize + "px";
+    this.element.style.fontSize = Math.round(cellSize / 3) + "px";
+    this.element.style.perspective =
+      (Math.max(this.columnCount, this.rowCount) * step) + "px";
 
-    const inputTileBorderWidth = Math.round(0.05 * step);
-    const inputTileBorderWidthStyle = inputTileBorderWidth + 'px';
+    const cellLayout = BoardCell.computeLayout(cellSize);
     for (let i = 0; i < this.rows.length; ++i) {
       const row = this.rows[i];
       for (let j = 0; j < row.cells.length; ++j) {
-        const cell = row.cells[j];
-        cell.inputTileLowerBorderElement.style.borderWidth =
-          inputTileBorderWidthStyle;
-        cell.inputTileTopBorderElement.style.borderWidth =
-          inputTileBorderWidthStyle;
+        row.cells[j].layout = cellLayout;
       }
     }
   }
@@ -342,8 +378,7 @@ function animateAttemptStatus(row, callback, interval = 250) {
     const cell = row.cells[j];
     const letter = cell.letter;
     setTimeout(function () {
-      cell.inputTileElement.classList.add('committed');
-      cell.statusTileElement.setAttribute('status', cell.status);
+      cell.applyCommittedStyle();
       if (!row.board.isExample) {
         const keyElement = getKeyboardKeyElement(letter);
         if (
