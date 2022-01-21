@@ -232,11 +232,11 @@ h1 {
 }
 
 .keyboard-key[status=match] {
-  background-color: #2E7D32;
+  background-color: #2980B9;
 }
 
 .keyboard-key[status=partial] {
-  background-color: #e5d456;
+  background-color: #E17619;
 }
 
 .keyboard-key[status=miss] {
