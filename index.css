@@ -23,6 +23,22 @@ p.no-margin-top {
   margin-top: 0;
 }
 
+p.no-margin-bottom {
+  margin-bottom: 0;
+}
+
+p.small-print {
+  font-size: 0.7em;
+}
+
+hr {
+  margin: 1em 0;
+  display: block;
+  border: none;
+  height: 0;
+  border-top: 1px solid #879294;
+}
+
 header {
   position: relative;
   display: flex;
@@ -401,4 +417,8 @@ h1 {
 .about-popup .example {
   height: 3.5em;
   justify-content: center;
+}
+
+.about-popup hr {
+  margin-top: 2em;
 }
