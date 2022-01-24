@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">  
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
     <script type="text/javascript" src="index.js"></script>
     <script type="text/javascript" src="words.js"></script>
@@ -23,7 +24,7 @@
   <body>
     <div class="game">
       <header>
-        <button class="icon-button help-button" onclick="showAboutPopup()">?</button>
+        <button class="icon-button help-button material-icons" onclick="showAboutPopup()">help_outline</button>
         <div class="title">
           <h1>SŁOWLE</h1>
           <span class="subtitle">
@@ -48,8 +49,11 @@
     <div id="popupOverlayElement">
       <div class="popup-container">
         <div class="popup">
-          <button id="popupCloseButtonElement" class="icon-button" onclick="hidePopup()">
-            ×
+          <button
+              id="popupCloseButtonElement"
+              class="icon-button material-icons"\
+              onclick="hidePopup()">
+            close
           </button>
 
           <div class="stats-popup">

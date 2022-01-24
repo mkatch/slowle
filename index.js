@@ -222,7 +222,7 @@ const ATTEMPT_COUNT = 6;
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['OK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
+  ['OK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'backspace'],
   ['Ą', 'Ć', 'Ę', 'Ł', 'Ń', 'Ó', 'Ś', 'Ź', 'Ż'],
 ];
 
@@ -263,8 +263,8 @@ function initializeGame() {
 
       if (key == 'OK') {
         keyElement.classList.add('ok', 'wide');
-      } else if (key == '⌫') {
-        keyElement.classList.add('wide');
+      } else if (key == 'backspace') {
+        keyElement.classList.add('backspace', 'wide', 'material-icons');
       }
       
       rowElement.append(keyElement);
@@ -308,7 +308,7 @@ function onWindowKeyDown(e) {
 	if (e.keyCode == 13) {
     onKey('OK');
   } else if (e.keyCode == 8) {
-    onKey('⌫');
+    onKey('backspace');
   } else {
     onKey(e.key.toUpperCase());
   }
@@ -343,7 +343,7 @@ function onKey(key) {
     } else {
       showToast('Wpisz 5-literowe słowo');
     }
-  } else if (key == '⌫') {
+  } else if (key == 'backspace') {
     if (game.currentLetterIndex > 0) {
       --game.currentLetterIndex;
       game.currentCell.letter = null;
