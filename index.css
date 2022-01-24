@@ -44,7 +44,6 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  border-bottom: 1px solid #404C4F;
   padding: 5px 0;
 }
 
