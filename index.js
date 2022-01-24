@@ -222,10 +222,9 @@ const ATTEMPT_COUNT = 6;
 const KEYBOARD_ROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
   ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-  ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
+  ['OK', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
   ['Ą', 'Ć', 'Ę', 'Ł', 'Ń', 'Ó', 'Ś', 'Ź', 'Ż'],
 ];
-const WIDE_KEYS = ['ENTER', '⌫'];
 
 let game = null;
 let board = null;
@@ -261,8 +260,11 @@ function initializeGame() {
       
       const key = keyboardRow[j];
       keyElement.textContent = key;
-      if (WIDE_KEYS.includes(keyboardRow[j])) {
-      	keyElement.classList.add('wide');
+
+      if (key == 'OK') {
+        keyElement.classList.add('ok', 'wide');
+      } else if (key == '⌫') {
+        keyElement.classList.add('wide');
       }
       
       rowElement.append(keyElement);
@@ -304,7 +306,7 @@ function onWindowResize() {
 
 function onWindowKeyDown(e) {
 	if (e.keyCode == 13) {
-    onKey('ENTER');
+    onKey('OK');
   } else if (e.keyCode == 8) {
     onKey('⌫');
   } else {
@@ -335,7 +337,7 @@ function onKey(key) {
     return;
   }
   
-  if (key == 'ENTER') {
+  if (key == 'OK') {
   	if (game.currentLetterIndex == WORD_LENGTH) {
     	commitCurrentAttempt();
     } else {

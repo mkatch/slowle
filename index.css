@@ -251,6 +251,10 @@ h1 {
   flex: 1;
 }
 
+.keyboard-key.ok, .about-popup .inline-ok {
+  background-color: #2980B9;
+}
+
 #toastElement:not(.visible) {
   visibility: hidden;
 }
@@ -389,23 +393,12 @@ h1 {
   text-decoration: underline;
 }
 
+.about-popup .inline-ok {
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
 .about-popup .example {
   height: 3.5em;
   justify-content: center;
-}
-
-.about-popup .new-word {
-  display: flex;
-  align-items: center;
-  margin-top: 2em;
-}
-
-.about-popup .new-word p {
-  margin: 0 0.8em;
-  text-align: center;
-}
-
-.about-popup .new-word .line {
-  flex: 1 1 20px;
-  border-top: 1px solid #879294;
 }
