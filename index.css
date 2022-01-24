@@ -246,6 +246,7 @@ a {
   cursor: pointer;
   background-color: #879294;
   min-width: 0;
+  transition: background-color 200ms;
 }
 
 .keyboard-key.backspace {
