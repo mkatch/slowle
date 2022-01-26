@@ -163,7 +163,7 @@ class Board {
     this.element.style.gap = gap + "px";
     this.element.style.fontSize = Math.round(cellSize / 3) + "px";
     this.element.style.perspective =
-      (Math.max(this.columnCount, this.rowCount) * step) + "px";
+      (Math.max(this.columnCount, this.rowCount) * step * 2) + "px";
 
     const cellLayout = BoardCell.computeLayout(cellSize);
     for (let i = 0; i < this.rows.length; ++i) {
