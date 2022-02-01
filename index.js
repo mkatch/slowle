@@ -565,10 +565,10 @@ function share() {
   }
   
   try {
-    navigator.share({text: data});
-  } catch (_) {
     navigator.clipboard.writeText(data);
     showToast("Skopiowano do schowka");
+  } catch (_) {
+    /* Ignore. */
   }
 }
 

@@ -391,6 +391,8 @@ a {
 }
 
 .share-button {
+  display: flex;
+  align-items: center;
   border: none;
   border-radius: 5px;
   padding: 10px;
@@ -403,6 +405,10 @@ a {
 
 .share-button:active {
   background-color: #1b491d;
+}
+
+.share-button .material-icons {
+  font-size: 1.2em;
 }
 
 #countdownElement {
