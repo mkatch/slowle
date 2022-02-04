@@ -226,26 +226,37 @@ a {
 
 #keyboardElement {
   flex: none;
-  margin: 10px;
+  margin: 5px;
   margin-top: 0;
 }
 
 .keyboard-row {
   display: flex;
   justify-content: center;
-  height: 60px;
+  font-size: 16px;
+  height: 3.7em;
 }
 
 .keyboard-key {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 4px 3px;
   border-radius: 4px;
   cursor: pointer;
   background-color: #879294;
-  min-width: 0;
+  width: 100%;
+  height: 100%;
   transition: background-color 200ms;
+}
+
+.keyboard-key-cell {
+  box-sizing: border-box;
+  padding: 4px 3px;
+}
+
+.keyboard-key-cell:not(.wide) {
+  flex: none;
+  width: 10%;
 }
 
 .keyboard-key.backspace {
@@ -265,11 +276,7 @@ a {
   background-color: #404C4F;
 }
 
-.keyboard-key:not(.wide) {
-  width: 8%;
-}
-
-.keyboard-key.wide {
+.keyboard-key-cell.wide {
   flex: 1;
 }
 

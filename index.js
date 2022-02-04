@@ -1,7 +1,7 @@
 class BoardCell {
   constructor(row, columnIndex) {
     this.element = document.createElement('div');
-    this.element.classList.add('cell', 'hehe');
+    this.element.classList.add('cell');
     this.element.style.gridArea = (row.index + 1) + " / " + (columnIndex + 1);
 
     this.frontFaceElement = document.createElement('div');
@@ -269,7 +269,7 @@ let game = null;
 let board = null;
 let exampleAttemptBoard = null;
 let exampleSolutionBoard = null;
-const keyboardKeyElements = [];
+const keyboardKeys = [];
 let successfulAttemptIndex = null;
 let solution = null;
 let history = null;
@@ -294,21 +294,34 @@ function initializeGame() {
     rowElement.classList.add('keyboard-row');
     
     for (let j = 0; j < keyboardRow.length; ++j) {
+      const value = keyboardRow[j];
+
+      keyCellElement = document.createElement('div');
+      keyCellElement.classList.add('keyboard-key-cell');
+      keyCellElement.setAttribute('data-value', value);
+      keyCellElement.onmousedown = onKeyMouseDown;
+
     	keyElement = document.createElement('div');
       keyElement.classList.add('keyboard-key');
-      keyElement.onclick = onKeyClick;
+      keyCellElement.append(keyElement);
       
-      const key = keyboardRow[j];
-      keyElement.textContent = key;
+      keyElement.textContent = value;
 
-      if (key == 'OK') {
-        keyElement.classList.add('ok', 'wide');
-      } else if (key == 'backspace') {
-        keyElement.classList.add('backspace', 'wide', 'material-icons');
+      if (value == 'OK') {
+        keyCellElement.classList.add('wide');
+        keyElement.classList.add('ok');
+      } else if (value == 'backspace') {
+        keyCellElement.classList.add('wide');
+        keyElement.classList.add('backspace', 'material-icons');
       }
       
-      rowElement.append(keyElement);
-      keyboardKeyElements.push(keyElement);
+      rowElement.append(keyCellElement);
+
+      keyboardKeys.push({
+        value: value,
+        element: keyElement,
+        cellElement: keyCellElement,
+      });
     }
     
     keyboardElement.append(rowElement);
@@ -355,8 +368,8 @@ function onWindowKeyDown(e) {
   }
 };
 
-function onKeyClick(e) {
-  onKey(e.target.textContent);
+function onKeyMouseDown(e) {
+  onKey(e.currentTarget.getAttribute('data-value'));
 }
 
 function onKey(key) {
@@ -486,11 +499,11 @@ function animateAttemptStatus(row, callback, interval = 250) {
     setTimeout(function () {
       cell.applyCommittedStyle();
       if (!row.board.isExample) {
-        const keyElement = getKeyboardKeyElement(letter);
+        const key = getKeyboardKey(letter);
         if (
             statusPriority(cell.status) >
-            statusPriority(keyElement.getAttribute('status'))) {
-          keyElement.setAttribute('status', cell.status);
+            statusPriority(key.element.getAttribute('status'))) {
+          key.element.setAttribute('status', cell.status);
         }
       }
     }, j * interval);
@@ -606,14 +619,8 @@ function saveHistory() {
   localStorage.setItem('history', JSON.stringify(history));
 }
 
-function getKeyboardKeyElement(letter) {
-  for (let i = 0; i < keyboardKeyElements.length; ++i) {
-    const element = keyboardKeyElements[i];
-    if (element.textContent == letter) {
-      return element;
-    }
-  }
-  return null;
+function getKeyboardKey(value) {
+  return keyboardKeys.find((key) => key.value == value);
 }
 
 function share() {
