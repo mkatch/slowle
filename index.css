@@ -297,6 +297,7 @@ a {
   top: 20%;
   transition: opacity 200ms;
   color: black;
+  text-align: center;
 }
 
 #toastElement.opacity0 {

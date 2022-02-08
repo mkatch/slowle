@@ -540,6 +540,9 @@ function loadProgress() {
 }
 
 function saveProgress() {
+  if (solution.isRandom) {
+    return;
+  }
   localStorage.setItem('progress', JSON.stringify(progress));
 }
 
@@ -576,6 +579,29 @@ function loadSolution(callback) {
     }
   }
   const failureCallback = function () { guardedCallback(null); }
+
+  if (window.location.search) {
+    const params = window.location.search.substring(1).split('&');
+    if (params.includes("random=1")) {
+      const index = Math.min(
+        Math.floor(Math.random() * WORDS.length),
+        WORDS.length - 1);
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      solution = {
+        id: 69420,
+        word: WORDS[index],
+        expiration: tomorrow,
+        isRandom: true,
+      };
+      showToast(
+        "Grasz w losowe Słowle. " +
+        "To jest tryb experymentalny, więc polecam grać w Incognito, " +
+        "żeby przypadkiem nie popsuć sobie ocen.");
+      callback();
+      return;
+    }
+  }
 
   const request = new XMLHttpRequest();
   // Adding timestamp query parameter to prevent caching.
@@ -616,6 +642,9 @@ function loadHistory() {
 }
 
 function saveHistory() {
+  if (solution.isRandom) {
+    return;
+  }
   localStorage.setItem('history', JSON.stringify(history));
 }
 
