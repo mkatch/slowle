@@ -582,7 +582,7 @@ function loadSolution(callback) {
 
   if (window.location.search) {
     const params = window.location.search.substring(1).split('&');
-    if (params.includes("random=1")) {
+    if (params.includes("ula=1")) {
       const index = Math.min(
         Math.floor(Math.random() * WORDS.length),
         WORDS.length - 1);
