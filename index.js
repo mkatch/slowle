@@ -280,6 +280,11 @@ window.onload = function () {
 };
 
 function initializeGame() {
+  gtag('config', 'G-Q64DS2P5WF', {
+    'send_page_view': false,
+    'solution_id': solution.id,
+  });
+
   board = new Board(boardContainerElement, WORD_LENGTH, ATTEMPT_COUNT);
   game = new Game();
 
@@ -409,6 +414,8 @@ function onKey(key) {
 }
 
 function commitCurrentAttempt() {
+  gtag('event', 'try_guess');
+
   let word = "";
   const row = game.currentRow;
   for (let j = 0; j < WORD_LENGTH; ++j) {
@@ -425,7 +432,12 @@ function commitCurrentAttempt() {
   
   checkCurrentAttempt();
 
-  const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
+  let callback = null;
+  if (game.outcome != null) {
+    gtag('event', 'finish', { 'outcome': game.outcome });
+    callback = showStatsPopup;
+  }
+
   animateAttemptStatus(row, callback);
 }
 
