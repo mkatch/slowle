@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html translate="no">
   <head>
+    <script type="text/javascript" src="settings.js"></script>
+
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q64DS2P5WF"></script>
     <script>
@@ -40,13 +42,17 @@
             po polsku 🇵🇱
           </span>
         </div>
+        <button
+            id="themeButtonElement"
+            class="icon-button theme-button material-icons"
+            onclick="switchTheme()"></button>
       </header>
 
       <div class="board-section">
         <div id="boardContainerElement" class="board-container"></div>
       </div>
 
-      <div id="keyboardElement"></div>
+      <div id="keyboardElement" tabindex="0"></div>
     </div>
 
     <div id="popupOverlayElement">

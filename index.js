@@ -341,7 +341,11 @@ function initializeGame() {
 
   loadHistory();
   loadProgress();
-  loadSettings();
+
+  saveSettings();
+  if (isFirstVisit) {
+    showAboutPopup();
+  }
 };
 
 function everySecond() {
@@ -365,7 +369,9 @@ function onWindowResize() {
 
 function onWindowKeyDown(e) {
 	if (e.keyCode == 13) {
-    onKey('OK');
+    if (keyboardElement.contains(document.activeElement)) {
+      onKey('OK');
+    }
   } else if (e.keyCode == 8) {
     onKey('backspace');
   } else {
@@ -394,6 +400,10 @@ function onKey(key) {
   }
   if (!supported) {
     return;
+  }
+
+  if (!keyboardElement.contains(document.activeElement)) {
+    keyboardElement.focus();
   }
   
   if (key == 'OK') {
@@ -556,21 +566,6 @@ function saveProgress() {
     return;
   }
   localStorage.setItem('progress', JSON.stringify(progress));
-}
-
-function loadSettings() {
-  settings = localStorage.getItem('settings');
-  if (settings) {
-    settings = JSON.parse(settings);
-  } else {
-    settings = {}
-    saveSettings();
-    showAboutPopup();
-  }
-}
-
-function saveSettings() {
-  localStorage.setItem('settings', JSON.stringify(settings));
 }
 
 function loadSolution(callback) {
@@ -754,7 +749,6 @@ function showStatsPopup() {
     previousSolutionId = solutionId;
 
     const skipPenaltyCount = Math.min(skipCount, 5);
-    console.log(skipCount);
     noteSum += skipPenaltyCount * NOTE_1.value;
     noteCount += skipPenaltyCount;
   }
@@ -810,6 +804,17 @@ function showAboutPopup() {
   exampleSolutionBoard.layOut();
   setTimeout(function () { animateAttemptStatus(exampleAttemptBoard.rows[0]); }, 200);
   setTimeout(function () { animateAttemptStatus(exampleSolutionBoard.rows[0]); }, 800);
+}
+
+function showSettingsPopup() {
+  darkThemeCheckboxElement.checked = (settings.theme == 'dark');
+
+  showPopup('settings');
+}
+
+function switchTheme() {
+  settings.theme = (settings.theme == 'dark' ? 'light' : 'dark');
+  saveSettings();
 }
 
 function padZeros(value, length) {
