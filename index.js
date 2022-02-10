@@ -346,6 +346,10 @@ function initializeGame() {
   if (isFirstVisit) {
     showAboutPopup();
   }
+
+  gtag('event', 'settings', {
+    'theme': settings.theme,
+  });
 };
 
 function everySecond() {
@@ -444,7 +448,10 @@ function commitCurrentAttempt() {
 
   let callback = null;
   if (game.outcome != null) {
-    gtag('event', 'finish', { 'outcome': game.outcome });
+    gtag('event', 'finish', {
+      'outcome': game.outcome,
+      'duration': Date.now() - progress.startTime,
+    });
     callback = showStatsPopup;
   }
 
@@ -546,8 +553,14 @@ function loadProgress() {
       solutionId: solution.id,
       attempts: [],
     }
-    saveProgress();
+    gtag('event', 'start_game');
   }
+
+  if (!progress.startTime) {
+    progress.startTime = Date.now();
+  }
+
+  saveProgress();
 
   for (let i = 0; i < progress.attempts.length; ++i) {
     const row = board.rows[i];
