@@ -8,10 +8,11 @@ function loadSettings() {
   if (settings) {
     settings = JSON.parse(settings);
   } else {
-    settings = {
-      theme: 'dark',
-    };
+    settings = {};
     isFirstVisit = true;
+  }
+  if (!settings.theme) {
+    settings.theme = 'dark';
   }
   // We want to do it as early as possible. Other settings can wait.
   applyThemeSetting();
