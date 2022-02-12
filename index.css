@@ -330,17 +330,21 @@ a {
 }
 
 #keyboardElement {
+  display: flex;
+  flex-direction: column;
   flex: none;
-  margin: 5px;
+  margin: 1.5%;
   margin-top: 0;
   outline: none;
+  font-size: 16px;
+  height: 14em;
+  max-height: 33%;
 }
 
 .keyboard-row {
+  flex: 1 1 0;
   display: flex;
   justify-content: center;
-  font-size: 16px;
-  height: 3.7em;
 }
 
 .keyboard-key {
@@ -358,7 +362,7 @@ a {
 
 .keyboard-key-cell {
   box-sizing: border-box;
-  padding: 4px 3px;
+  padding: 0.8%;
 }
 
 .keyboard-key-cell:not(.wide) {
