@@ -160,6 +160,10 @@ header > * {
   color: var(--text-color-title);
 }
 
+.title a {
+  color: var(--text-color-title);
+}
+
 .subtitle {
   font-size: 10px;
 }
