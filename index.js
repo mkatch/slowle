@@ -592,6 +592,14 @@ function loadSolution(callback) {
     if (candidate) {
       solution = candidate;
       solution.word = WORDS[candidate.index];
+
+      if (solution.id == 71) {
+        showToast(
+          "Z powodów technicznych w piątek 18. i w sobotę 19. marca jest to " + 
+          "samo słowo. Przepraszamy za kłopoty.",
+          5000);
+      }
+
       callback();
     } else {
       solution = null;
@@ -705,7 +713,7 @@ function share() {
   }
 }
 
-function showToast(message) {
+function showToast(message, duration = 3000) {
   toastElement.children[0].textContent = message;
   toastElement.classList.add('visible');
   const tag = Object();
@@ -719,7 +727,7 @@ function showToast(message) {
         }
       }, 200);
     }
-  }, 3000);
+  }, duration);
 
   toastElement.classList.add('opacity0');
   window.requestAnimationFrame(function () {
