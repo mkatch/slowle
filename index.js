@@ -595,8 +595,9 @@ function loadSolution(callback) {
 
       if (solution.id == 230) {
         showToast(
-          "Przepraszamy za kłopoty w czwartek 25. sierpnia. " +
-          "Ten dzień nie liczy się do ocen a słowo przedłużone do soboty.",
+          "Przepraszamy za kłopoty w czwartek, 25. sierpnia. " +
+          "Ten dzień nie liczy się do ocen a słowo czwartkowe przedłużone na " +
+          "piątek.",
           7000);
       }
 
