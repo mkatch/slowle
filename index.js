@@ -593,11 +593,11 @@ function loadSolution(callback) {
       solution = candidate;
       solution.word = WORDS[candidate.index];
 
-      if (solution.id == 71) {
+      if (solution.id == 230) {
         showToast(
-          "Z powodów technicznych w piątek 18. i w sobotę 19. marca jest to " + 
-          "samo słowo. Przepraszamy za kłopoty.",
-          5000);
+          "Przepraszamy za kłopoty w czwartek 25. sierpnia. " +
+          "Ten dzień nie liczy się do ocen a słowo przedłużone do soboty.",
+          7000);
       }
 
       callback();
