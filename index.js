@@ -264,6 +264,9 @@ const OUTCOME_NOTES = {
   "X/6": NOTE_2,
   "-/6": NOTE_2,
 };
+const CORRUPTED_SOLUTION_IDS = [
+  258,
+];
 
 let game = null;
 let board = null;
@@ -754,19 +757,21 @@ function showStatsPopup() {
   let previousSolutionId = history[0].i - 1;
   for (let k = 0; k < history.length; ++k) {
     const entry = history[k];
-
-    const outcome = entry.o;
-    if (outcome[0] != '-' && outcome[0] != 'X') {
-      ++winCount;
-    }
-
-    if (k != history.length - 1 || game.outcome != null) {
-      noteSum += OUTCOME_NOTES[outcome].value;
-      ++noteCount;
-      ++concludedCount;
-    }
-
     const solutionId = entry.i;
+    const outcome = entry.o;
+
+    if (!CORRUPTED_SOLUTION_IDS.includes(solutionId)) {
+      if (outcome[0] != '-' && outcome[0] != 'X') {
+        ++winCount;
+      }
+
+      if (k != history.length - 1 || game.outcome != null) {
+        noteSum += OUTCOME_NOTES[outcome].value;
+        ++noteCount;
+        ++concludedCount;
+      }
+    }
+
     const skipCount = solutionId - previousSolutionId - 1;
     previousSolutionId = solutionId;
 
