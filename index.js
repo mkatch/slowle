@@ -275,7 +275,7 @@ let exampleSolutionBoard = null;
 const keyboardKeys = [];
 let successfulAttemptIndex = null;
 let solution = null;
-let history = null;
+let outcomes = null;
 let progress = null;
 
 window.onload = function () {
@@ -342,7 +342,7 @@ function initializeGame() {
   
   onWindowResize();
 
-  loadHistory();
+  loadOutcomes();
   loadProgress();
 
   saveSettings();
@@ -520,8 +520,8 @@ function finishGame(success) {
 
   shareButtonElement.removeAttribute('disabled');
   
-  history[history.length - 1].o = game.outcome;
-  saveHistory();
+  outcomes[outcomes.length - 1].o = game.outcome;
+  saveOutcomes();
 }
 
 function animateAttemptStatus(row, callback, interval = 250) {
@@ -659,25 +659,25 @@ function loadSolution(callback) {
   request.send(null);
 }
 
-function loadHistory() {
-  history = localStorage.getItem('history');
-  if (history) {
-    history = JSON.parse(history);
+function loadOutcomes() {
+  outcomes = localStorage.getItem('history');
+  if (outcomes) {
+    outcomes = JSON.parse(outcomes);
   } else {
-    history = [];
+    outcomes = [];
   }
 
-  if (history.length == 0 || history[history.length - 1].i != solution.id) {
-    history.push({ i: solution.id, o: "-/6" });
-    saveHistory();
+  if (outcomes.length == 0 || outcomes[outcomes.length - 1].i != solution.id) {
+    outcomes.push({ i: solution.id, o: "-/6" });
+    saveOutcomes();
   }
 }
 
-function saveHistory() {
+function saveOutcomes() {
   if (solution.isRandom) {
     return;
   }
-  localStorage.setItem('history', JSON.stringify(history));
+  localStorage.setItem('history', JSON.stringify(outcomes));
 }
 
 function getKeyboardKey(value) {
@@ -754,9 +754,9 @@ function showStatsPopup() {
   let concludedCount = 0;
   let noteSum = 0;
   let noteCount = 0;
-  let previousSolutionId = history[0].i - 1;
-  for (let k = 0; k < history.length; ++k) {
-    const entry = history[k];
+  let previousSolutionId = outcomes[0].i - 1;
+  for (let k = 0; k < outcomes.length; ++k) {
+    const entry = outcomes[k];
     const solutionId = entry.i;
     const outcome = entry.o;
 
@@ -765,7 +765,7 @@ function showStatsPopup() {
         ++winCount;
       }
 
-      if (k != history.length - 1 || game.outcome != null) {
+      if (k != outcomes.length - 1 || game.outcome != null) {
         noteSum += OUTCOME_NOTES[outcome].value;
         ++noteCount;
         ++concludedCount;
@@ -800,12 +800,12 @@ function showStatsPopup() {
     }
   }
 
-  playedCountElement.textContent = history.length;
-  if (history.length == 1) {
+  playedCountElement.textContent = outcomes.length;
+  if (outcomes.length == 1) {
     playedCountLabelElement.textContent = "gra"
   } else {
-    const d = history.length % 10;
-    const dd = history.length % 100;
+    const d = outcomes.length % 10;
+    const dd = outcomes.length % 100;
     if ((10 <= dd && dd <= 21) || (d <= 1 || 5 <= d)) {
       playedCountLabelElement.textContent = "gier"
     } else {
@@ -837,6 +837,10 @@ function showSettingsPopup() {
   darkThemeCheckboxElement.checked = (settings.theme == 'dark');
 
   showPopup('settings');
+}
+
+function showHistoryPopup() {
+  showPopup('history');
 }
 
 function switchTheme() {
