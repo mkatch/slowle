@@ -65,14 +65,17 @@ while not reviewed:
         p = "X" if index in rejectedWordIndices else i
         print(p, ": ", words[index])
 
-    amendments = input("Amendments: ")
-    if amendments == "":
+    amendment = input("Amendment: ")
+    if amendment == "":
         reviewed = True
+    elif amendment.isdecimal():
+        ai = int(amendment)
+        rejectedWordIndices.add(poolAdditions[ai])
     else:
         try:
-            ais = [int(s) for s in amendments.split(' ')]
-            for ai in ais:
-                rejectedWordIndices.add(poolAdditions[ai])
+            index = words.index(amendment)
+            rejectedWordIndices.discard(index)
+            poolAdditions.append(index)
         except:
             print("Invalid input")
             continue
