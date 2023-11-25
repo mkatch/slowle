@@ -84,8 +84,11 @@ class BoardCell {
     return {
       inputTileBorderWidthStyle: Math.round(0.05 * size) + 'px',
       pendingTransformStyle: "translateZ(-" + halfSizeStyle + ") rotateX(0)",
+      // TODO: The 90.00001deg is a hack to work around a bug in Safari 17.1.
+      // I have no idea why, but the tile disappears at the end of transition
+      // when the rotation is exactly 90deg.
       committedTransformStyle:
-        "translateZ(-" + halfSizeStyle + ") rotateX(-90deg)",
+        "translateZ(-" + halfSizeStyle + ") rotateX(-90.00001deg)",
       frontFaceTransformStyle: "translateZ(" + halfSizeStyle + ")",
     };
   }
