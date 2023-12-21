@@ -42,7 +42,7 @@ class BoardCell {
       this._letter = null;
       this.element.classList.add('empty');
       this.inputElement.textContent = "";
-      this.statusTileElement.textContent = "";
+      //this.statusTileElement.textContent = "";
     }
   }
 
@@ -67,7 +67,11 @@ class BoardCell {
   }
 
   applyCommittedStyle() {
-    this.element.setAttribute('status', this.status);
+    if (this.status) {
+      this.element.setAttribute('status', this.status);
+    } else {
+      this.element.removeAttribute('status');
+    }
     this._applyConditionalLayout();
   }
 
@@ -108,6 +112,7 @@ class BoardRow {
 
 class Board {
   constructor(containerElement, columnCount, rowCount) {
+    this._extraBannerElement = null;
     this.containerElement = containerElement;
     this.columnCount = columnCount;
     this.rowCount = rowCount;
@@ -147,8 +152,17 @@ class Board {
     return board;
   }
 
+  get isExtra() { return !!this._extraBannerElement; }
+
   layOut() {
     const rect = this.containerElement.getBoundingClientRect();
+    const oldRect = this._containerRect;
+    if (oldRect &&
+        oldRect.width == rect.width &&
+        oldRect.height == rect.height) {
+      return;
+    }
+    this._containerRect = rect;
 
     // "Step" is the grid cell size together with the gap. For simplicity of
     // computation we assume there is as many gaps as there are cells, although
@@ -180,10 +194,7 @@ class Board {
 
 class Game {
   constructor() {
-    this._currentAttemptIndex = 0;
-    this._currentLetterIndex = 0;
-    this.outcome = null;
-    this._updateCurrentCell();
+    this.reset();
   }
 
   get currentAttemptIndex() { return this._currentAttemptIndex; }
@@ -203,6 +214,13 @@ class Game {
   get currentRow() { return this._currentRow; }
 
   get currentCell() { return this._currentCell; }
+
+  reset() {
+    this._currentAttemptIndex = 0;
+    this._currentLetterIndex = 0;
+    this.outcome = null;
+    this._updateCurrentCell();
+  }
 
   _updateCurrentCell() {
     const row = board.rows[this.currentAttemptIndex];
@@ -270,6 +288,29 @@ const OUTCOME_NOTES = {
 const CORRUPTED_SOLUTION_IDS = [
   258,
 ];
+const MONTH_NAMES = [
+  "Styczeń",
+  "Luty",
+  "Marzec",
+  "Kwiecień",
+  "Maj",
+  "Czerwiec",
+  "Lipiec",
+  "Sierpień",
+  "Wrzesień",
+  "Październik",
+  "Listopad",
+  "Grudzień",
+];
+const WEEKDAY_SHORT_NAMES = [
+  "Nd",
+  "Pn",
+  "Wt",
+  "Śr",
+  "Cz",
+  "Pt",
+  "Sb",
+];
 
 let game = null;
 let board = null;
@@ -278,17 +319,26 @@ let exampleSolutionBoard = null;
 const keyboardKeys = [];
 let successfulAttemptIndex = null;
 let solution = null;
+let latestSolution = null;
 let outcomes = null;
 let progress = null;
+let history = null;
+let openSolutionIds = null;
+let historyCallbacks = [];
+let shouldIgnoreInput = false;
 
 window.onload = function () {
-  loadSolution(initializeGame);
+  makeShowable(extraBannerElement, {
+    show: false,
+    frame: onExtraBannerShowHideFrame,
+  });
+  loadLatestSolution(initializeGame);
 };
 
 function initializeGame() {
   gtag('config', 'G-Q64DS2P5WF', {
     'send_page_view': false,
-    'solution_id': solution.id,
+    'solution_id': latestSolution.id,
   });
 
   board = new Board(boardContainerElement, WORD_LENGTH, ATTEMPT_COUNT);
@@ -346,7 +396,7 @@ function initializeGame() {
   onWindowResize();
 
   loadOutcomes();
-  loadProgress();
+  const lastPlayed = loadLastPlayed();
 
   saveSettings();
   if (isFirstVisit) {
@@ -356,10 +406,16 @@ function initializeGame() {
   gtag('event', 'settings', {
     'theme': settings.theme,
   });
+
+  if (lastPlayed) {
+    startGame({ solutionId: lastPlayed })
+  } else {
+    startLatestGame();
+  }
 };
 
 function everySecond() {
-  const millisLeft = solution.expiration - Date.now();
+  const millisLeft = latestSolution.expiration - Date.now();
   if (millisLeft <= 0) {
     location.reload();
   } else {
@@ -393,7 +449,19 @@ function onKeyMouseDown(e) {
   onKey(e.currentTarget.getAttribute('data-value'));
 }
 
+function setShouldIgnoreInput(value) {
+  shouldIgnoreInput = value;
+  if (value) {
+    board.element.classList.add('ignore-input');
+  } else {
+    board.element.classList.remove('ignore-input');
+  }
+}
+
 function onKey(key) {
+  if (shouldIgnoreInput) {
+    return;
+  }
 	if (!game.currentRow) {
   	return;
   }
@@ -522,9 +590,12 @@ function finishGame(success) {
   }
 
   shareButtonElement.removeAttribute('disabled');
-  
-  outcomes[outcomes.length - 1].o = game.outcome;
-  saveOutcomes();
+
+  // Only save if this is the first attempt.
+  if (outcomes.get(solution.id)[0] == '-') {
+    outcomes.set(solution.id, game.outcome);
+    saveOutcomes();
+  }
 }
 
 function animateAttemptStatus(row, callback, interval = 250) {
@@ -533,7 +604,7 @@ function animateAttemptStatus(row, callback, interval = 250) {
     const letter = cell.letter;
     setTimeout(function () {
       cell.applyCommittedStyle();
-      if (!row.board.isExample) {
+      if (letter && !row.board.isExample) {
         const key = getKeyboardKey(letter);
         if (
             statusPriority(cell.status) >
@@ -549,72 +620,182 @@ function animateAttemptStatus(row, callback, interval = 250) {
   }
 }
 
-function loadProgress() {
-  progress = localStorage.getItem('progress');
+function loadLastPlayed() {
+  let legacyProgress = localStorage.getItem('progress');
+  if (legacyProgress) {
+    legacyProgress = JSON.parse(legacyProgress);
+    if (legacyProgress.solutionId == latestSolution.id) {
+      progress = legacyProgress;
+      progress.date = expirationToDate(latestSolution.expiration);
+      saveProgress();
+    }
+    // delete legacy progress
+  }
+
+  let lastPlayed = localStorage.getItem('lastPlayed');
+  if (lastPlayed) {
+    lastPlayed = parseInt(lastPlayed);
+  }
+  return lastPlayed;
+}
+
+function loadOrInitProgress(kwargs) {
+  progress = localStorage.getItem(`progress#${kwargs.solutionId}`);
   if (progress) {
     progress = JSON.parse(progress);
-  }
-  if (!progress || progress.solutionId != solution.id) {
+  } else {
+    // TODO: better kwargs handling
+    console.assert(!!kwargs.solutionId);
+    console.assert(!!kwargs.wordIndex);
     progress = {
-      solutionId: solution.id,
+      solutionId: kwargs.solutionId,
+      wordIndex: kwargs.wordIndex,
       attempts: [],
+      startTime: Date.now(),
     }
-    gtag('event', 'start_game');
+    if ('date' in kwargs) {
+      progress.date = kwargs.date;
+    } else if ('expiration' in kwargs) {
+      progress.date = expirationToDate(kwargs.expiration);
+    }
   }
-
-  if (!progress.startTime) {
-    progress.startTime = Date.now();
-  }
-
   saveProgress();
+}
 
-  for (let i = 0; i < progress.attempts.length; ++i) {
-    const row = board.rows[i];
-    const word = progress.attempts[i];
-    for (let j = 0; j < WORD_LENGTH; ++j) {
-      row.cells[j].letter = word[j];
-    }
-    checkCurrentAttempt();
-    const callback = (successfulAttemptIndex != null) ? showStatsPopup : null;
-    setTimeout(function () { animateAttemptStatus(row, callback, 50); }, i * 200);
+function startGame(kwargs) {
+  setShouldIgnoreInput(true);
+
+  loadOrInitProgress(kwargs);
+
+  solution = {
+    id: progress.solutionId,
+    index: progress.wordIndex,
+    word: WORDS[progress.wordIndex],
+  };
+
+  if (!outcomes.has(solution.id)) {
+    outcomes.set(solution.id, "-/6");
+    saveOutcomes();
   }
+
+  game.reset();
+  successfulAttemptIndex = null;
+
+  if (solution.id != latestSolution.id) {
+    // TODO: Is it possible to not have date?
+    extraBannerContentElement.textContent = progress.date
+        ? `#${solution.id} z dnia ${progress.date}`
+        : `#${solution.id}`;
+    extraBannerElement.show(true);
+  } else {
+    extraBannerContentElement.textContent = "";
+    extraBannerElement.show(false);
+  }
+
+  for (const key of keyboardKeys) {
+    key.element.removeAttribute('status');
+  }
+  
+  let wasNotEmpty = false;
+  for (let i = 0; i < board.rows.length; ++i) {
+    const row = board.rows[i];
+    let isRowEmpty = true;
+    for (const cell of row.cells) {
+      if (!cell.letter) {
+        break;
+      }
+      isRowEmpty = false;
+      cell.letter = null;
+      delete cell.status;
+    }
+    if (isRowEmpty) {
+      break;
+    }
+    wasNotEmpty = true;
+    setTimeout(function () { animateAttemptStatus(row, null, 50); }, i * 200);
+  }
+
+  setTimeout(
+    function () {
+      applyProgress(0, 0, function () {
+        setShouldIgnoreInput(false);
+        setTimeout(function () {
+          if (successfulAttemptIndex != null && !isPopupShown()){
+            showStatsPopup();
+          }
+        }, 1000);
+      });
+    },
+    wasNotEmpty ? 500 : 0,
+  );
+}
+
+function startLatestGame() {
+  startGame({
+    solutionId: latestSolution.id,
+    wordIndex: latestSolution.index,
+    expiration: latestSolution.expiration,
+  });
+}
+
+function applyProgress(i, j, callback) {
+  if (i >= progress.attempts.length) {
+    if (i == 0) {
+      callback();
+    }
+    return;
+  }
+
+  const row = board.rows[i];
+  const word = progress.attempts[i];
+  
+  row.cells[j].letter = word[j];
+
+  ++j;
+  if (j >= WORD_LENGTH) {
+    j = 0;
+    ++i;
+    checkCurrentAttempt();
+    animateAttemptStatus(row, callback, 50); 
+  }
+
+  setTimeout(function () { applyProgress(i, j, callback); }, 50);
 }
 
 function saveProgress() {
-  if (solution.isRandom) {
+  if (solution && solution.isRandom) {
     return;
   }
-  localStorage.setItem('progress', JSON.stringify(progress));
+
+  localStorage.setItem('lastPlayed', progress.solutionId.toString());
+  localStorage.setItem(
+    `progress#${progress.solutionId}`,
+    JSON.stringify(progress));
 }
 
-function loadSolution(callback) {
-  let callbackCalled = false;
-  const guardedCallback = function (candidate) {
-    if (callbackCalled) {
-      return;
-    }
-    callbackCalled = true;
-
-    if (candidate) {
-      solution = candidate;
-      solution.word = WORDS[candidate.index];
-
-      if (solution.id == 230) {
-        showToast(
-          "Przepraszamy za kłopoty w czwartek, 25. sierpnia. " +
-          "Ten dzień nie liczy się do ocen a słowo czwartkowe przedłużone na " +
-          "piątek.",
-          7000);
-      }
-
-      callback();
-    } else {
-      solution = null;
-      showToast("Nie można załadować słowa. Spróbuj ponownie później.")
+function loadJson(name, callback) {
+  const guardedCallback = function (json) {
+    if (callback) {
+      callback(json);
+      callback = null;
     }
   }
   const failureCallback = function () { guardedCallback(null); }
 
+  const request = new XMLHttpRequest();
+  // Adding timestamp query parameter to prevent caching.
+  request.open('GET', name + ".json" + "?t=" + Date.now(), true);
+  request.timeout = 5000;
+  request.onerror = failureCallback;
+  request.ontimeout = failureCallback;
+  request.onload = function () {
+    const json = JSON.parse(request.responseText);
+    guardedCallback(json);
+  }
+  request.send(null);
+}
+
+function loadLatestSolution(callback) {
   if (window.location.search) {
     const params = window.location.search.substring(1).split('&');
     if (params.includes("ula=1")) {
@@ -638,49 +819,381 @@ function loadSolution(callback) {
     }
   }
 
-  const request = new XMLHttpRequest();
-  // Adding timestamp query parameter to prevent caching.
-  request.open('GET', "solution.json" + "?t=" + Date.now(), true);
-  request.timeout = 5000;
-  request.onerror = failureCallback;
-  request.ontimeout = failureCallback;
-
-  request.onload = function () {
-    const now = Date.now();
-    const candidates = JSON.parse(request.responseText);
-    for (let i = 0; i < candidates.length; ++i) {
-      const candidate = candidates[i];
-      candidate.expiration = Date.parse(candidate.expiration);
-      if (now <= candidate.expiration) {
-        guardedCallback(candidate);
-        return;
+  loadJson('solution', function (candidates) {
+    if (candidates) {
+      const now = Date.now();
+      for (const candidate of candidates) {
+        candidate.expiration = Date.parse(candidate.expiration);
+        if (now <= candidate.expiration) {
+          latestSolution = candidate;
+          // solution.word = WORDS[candidate.index];
+          // latestSolution = solution;
+          callback();
+          return;
+        }
       }
     }
-    failureCallback();
-  }
 
-  request.send(null);
+    showToast("Nie można załadować słowa. Spróbuj ponownie później.")
+  });
 }
 
 function loadOutcomes() {
-  outcomes = localStorage.getItem('history');
-  if (outcomes) {
-    outcomes = JSON.parse(outcomes);
+  let outcomeArray = localStorage.getItem('history');
+  if (outcomeArray) {
+    outcomeArray = JSON.parse(outcomeArray);
   } else {
-    outcomes = [];
+    outcomeArray = [];
   }
 
-  if (outcomes.length == 0 || outcomes[outcomes.length - 1].i != solution.id) {
-    outcomes.push({ i: solution.id, o: "-/6" });
-    saveOutcomes();
+  outcomes = new Map();
+  for (const outcome of outcomeArray) {
+    outcomes.set(outcome.i, outcome.o);
   }
+}
+
+function getSortedOutcomeArray() {
+  const outcomeArray = [];
+  for (const [i, o] of outcomes) {
+    outcomeArray.push({ i: i, o: o });
+  }
+  outcomeArray.sort((a, b) => a.i - b.i);
+  return outcomeArray;
 }
 
 function saveOutcomes() {
   if (solution.isRandom) {
     return;
   }
-  localStorage.setItem('history', JSON.stringify(outcomes));
+  localStorage.setItem('history', JSON.stringify(getSortedOutcomeArray()));
+}
+
+function expirationToYearMonthDay(expiration) {
+  const validNoonish = new Date(expiration - 12 * 60 * 60 * 1000);
+  const year = validNoonish.getUTCFullYear();
+  const month = validNoonish.getUTCMonth();
+  const day = validNoonish.getUTCDate() - 1;
+  return [year, month, day];
+}
+
+function formatYearMonthDay(year, month, day) {
+  return `${day}.${padZeros(month)}.${year}`;
+}
+
+function expirationToDate(expiration) {
+  return formatYearMonthDay(...expirationToYearMonthDay(expiration));
+}
+
+function loadOpenGames() {
+  function tryLoadOpenGame(key) {
+    const solutionId = parseInt(key.substring('progress#'.length));
+    if (isNaN(solutionId)) {
+      return null;
+    }
+    const openGame = JSON.parse(localStorage.getItem(key));
+    if (solutionId != latestSolution.id && solutionId != progress.solutionId) {
+      const attempts = openGame.attempts;
+      if (attempts.length == 0 || attempts.length >= ATTEMPT_COUNT) {
+        return null;
+      }
+      if (attempts[attempts.length - 1] == WORDS[openGame.wordIndex]) {
+        return null;
+      }
+    }
+    return openGame;
+  }
+
+  const retiredProgressKeys = [];
+  const openGames = [];
+  for (const key in localStorage) {
+    if (!key.startsWith('progress#')) {
+      continue;
+    }
+    const openGame = tryLoadOpenGame(key);
+    if (openGame) {
+      openGames.push(openGame);
+    } else {
+      retiredProgressKeys.push(key);
+    }
+  }
+
+  openGames.sort((a, b) => a.solutionId - b.solutionId);
+  for (const key of retiredProgressKeys) {
+    localStorage.removeItem(key);
+  }
+
+  openGamesElement.innerHTML = '';
+  openSolutionIds = new Set();
+  for (openGame of openGames) {
+    createChildElement(openGamesElement, `
+      <li class="open-game">
+        ${openGame.solutionId}, ${openGame.date}
+      </li>
+    `);
+    openSolutionIds.add(openGame.solutionId);
+  }
+}
+
+function loadHistory(callback) {
+  if (history) {
+    callback();
+    return;
+  }
+
+  historyCallbacks.push(callback);
+  if (historyCallbacks.length > 1) {
+    return;
+  }
+
+  loadJson('history', function (json) {
+    history = [];
+    if (!json) {
+      showToast("Nie można załadować historii.");
+      return;
+    }
+
+    history = [];
+    historyYear = { year: null };
+    for (const entry of json) {
+      const expiration = Date.parse(entry.expiration);
+      const [year, month, day] = expirationToYearMonthDay(expiration);
+
+      if (year != historyYear.year) {
+        historyYear = {
+          year: year,
+          iyear: history.length,
+          months: []
+        };
+        let it = new Date(0);
+        it.setUTCFullYear(year);
+        while (it.getUTCFullYear() == year) {
+          const historyMonth = {
+            month: it.getUTCMonth(),
+            days: [],
+          };
+          while (it.getUTCMonth() == historyMonth.month) {
+            historyMonth.days.push({
+              day: it.getUTCDate(),
+              dayOfWeek: it.getUTCDay(),
+              valid: false,
+            });
+            it.setUTCDate(it.getUTCDate() + 1);
+          }
+          historyYear.months.push(historyMonth);
+        }
+        history.push(historyYear);
+      }
+
+      historyDay = historyYear.months[month].days[day];
+      historyDay.valid = true;
+      historyDay.wordIndex = entry.index;
+      historyDay.solutionId = entry.id;
+    }
+    
+    for (const historyYear of history) {
+      for (const historyMonth of historyYear.months) {
+        let challengeCount = 0;
+        for (const historyDay of historyMonth.days) {
+          if (historyDay.valid) {
+            ++challengeCount;
+          }
+        }
+        historyMonth.challengeCount = challengeCount;
+      }
+    }
+
+    for (const historyYear of history) {
+      const yearElement = createChildElement(historyElement, `
+        <li class="year">
+          <span class="year-header">${historyYear.year}</span>
+          <ul class="months"></ul>
+        </li>
+      `);
+      const monthListElement = yearElement.querySelector('.months');
+      for (const historyMonth of historyYear.months) {
+        const monthElement = createChildElement(monthListElement, `
+          <li class="month-cell"">
+            <div class="month">
+              <span>${MONTH_NAMES[historyMonth.month]}</span>
+              <br>
+              <span>${historyMonth.challengeCount}</span>
+            </div>
+          </li>
+        `);
+        monthElement.addEventListener(
+          'click',
+          (_) => onHistoryMonthClick(historyYear.iyear, historyMonth.month));
+      }
+    }
+
+    for (const callback of historyCallbacks) {
+      callback();
+    }
+    historyCallbacks = [];
+  });
+}
+
+function onExtraBannerShowHideFrame() {
+  if (extraBannerElement.showHide.phase == 'begin') {
+    const contentHeight =
+      extraBannerElement.firstElementChild.getBoundingClientRect().height;
+    extraBannerElement.style.setProperty(
+      '--content-height', contentHeight + "px");
+  }
+  board.layOut();
+}
+
+function onExtraBannerCloseClick() {
+  extraBannerElement.show(false);
+  startLatestGame();
+}
+
+function onHistoryMonthClick(iyear, month) {
+  historyMonthTitleElement.textContent
+    = `${MONTH_NAMES[month]}  ${history[iyear].year}`;
+  historyMonthElement.innerHTML = '';
+
+  const historyMonth = history[iyear].months[month];
+  for (const historyDay of historyMonth.days) {
+    const dayElement = createChildElement(historyMonthElement, `
+      <li class="day">
+        <div class="cells">
+          <div class="number">${historyDay.day}.</div>
+          <div class="name">${WEEKDAY_SHORT_NAMES[historyDay.dayOfWeek]}</div>
+          <div class="id"></div>
+          <div class="word"></div>
+          <div class="outcome"></div>
+        </div>
+      </li>
+    `);
+    dayElement.addEventListener('click', onHistoryDayClick);
+    const idElement = dayElement.querySelector('.id');
+    const wordElement = dayElement.querySelector('.word');
+    const outcomeElement = dayElement.querySelector('.outcome');
+    
+    const solutionId = historyDay.solutionId;
+    if (solutionId) {
+      idElement.textContent = `#${solutionId}`;
+      
+      const isOpen = openSolutionIds.has(solutionId);
+      if (isOpen) {
+        dayElement.classList.add('open');
+        wordElement.textContent = 'w trakcie';
+      }
+
+      const outcome = outcomes.get(solutionId);
+      if (outcome) {
+        if (!isOpen) {
+          wordElement.textContent = "• • • • •";
+        }
+        outcomeElement.textContent = outcome;
+      } else {
+        if (!isOpen) {
+          wordElement.textContent = "niegrane";
+        }
+      }
+
+      const actionsElement = createChildElement(
+        dayElement, `<div class="actions"></div>`);
+      actionsElement.historyDay = historyDay;
+      makeShowable(actionsElement, {
+        show: false,
+        frame: onHistoryDayActionsShowHideFrame,
+      });
+    } else {
+      wordElement.textContent = 'usunięte';
+      dayElement.classList.add('unavailable');
+    }
+  }
+
+  showPopup('history-month');
+}
+
+let activeDayElement = null;
+function onHistoryDayClick(e) {
+  const dayElement = e.currentTarget.closest('.day');
+  if (activeDayElement) {
+    activeDayElement.querySelector('.actions').show(false);
+  }
+  if (activeDayElement == dayElement) {
+    activeDayElement = null;
+  } else {
+    activeDayElement = dayElement;
+    dayElement.querySelector('.actions').show(true);
+  }
+}
+
+function onHistoryDayActionsShowHideFrame() {
+  if (!this.showHide.target && this.showHide.phase == 'end') {
+    this.innerHTML = '';
+    this.drawerElement = null;
+    return;
+  }
+
+  if (!this.drawerElement) {
+    const solutionId = this.historyDay.solutionId;
+    const isOpen = openSolutionIds.has(solutionId);
+    const hasOutcome = outcomes.has(solutionId);
+    const playButtonLabel = openSolutionIds.has(solutionId)
+      ? 'Kontynuuj'
+      : 'Graj';
+    this.drawerElement = createChildElement(this, `
+      <div class="drawer">
+        ${}
+        <button class="day-action-button reveal-word">Pokaż słowo</button>
+      </div>
+    `);
+    const playButton = createChildElement(this.drawerElement, `<button class="day-action-button play">Graj</button>`)
+    if (openSolutionIds.has(solutionId)) {
+      playButtoncreateChildElement(this.drawerElement, ``)
+    }
+    this.innerHTML = `
+      <div class="drawer">
+        <button
+            class="day-action-button reveal-word"
+            onclick="onHistoryDayRevealWordClick(event)">
+          Pokaż słowo
+        <button
+            class="day-action-button play"
+            onclick="onHistoryDayPlayClick(event)">
+          Graj
+        </button>
+      </div>
+    `;
+    this.drawerElement = this.querySelector('.drawer');
+  }
+
+  if (this.showHide.phase == 'begin') {
+    this.style.setProperty(
+      '--content-height',
+      this.drawerElement.getBoundingClientRect().height + "px");
+  }
+}
+
+function onHistoryDayPlayClick(e) {
+  const actionsElement = e.currentTarget.closest('.actions');
+  const solutionId = actionsElement.historyDay.solutionId;
+
+  for (const historyYear of history) {
+    for (const historyMonth of historyYear.months) {
+      for (const historyDay of historyMonth.days) {
+        if (historyDay.solutionId == solutionId) {
+          hidePopup();
+          startGame({
+            solutionId: solutionId,
+            wordIndex: historyDay.wordIndex,
+            date: formatYearMonthDay(
+              historyYear.year, historyMonth.month, historyDay.day),
+          });
+          return;
+        }
+      }
+    }
+  }
+}
+
+function onHistoryDayRevealWordClick(e) {
+  console.log(`reveal word ${e}`);
 }
 
 function getKeyboardKey(value) {
@@ -752,7 +1265,12 @@ function hidePopup() {
   popupOverlayElement.removeAttribute('which');
 }
 
+function isPopupShown() {
+  return popupOverlayElement.hasAttribute('which')
+}
+
 function showStatsPopup() {
+  const outcomes = getSortedOutcomeArray();
   let winCount = 0;
   let concludedCount = 0;
   let noteSum = 0;
@@ -843,7 +1361,11 @@ function showSettingsPopup() {
 }
 
 function showHistoryPopup() {
-  showPopup('history');
+  if (!progress) {
+    return;
+  }
+  loadOpenGames();
+  loadHistory(function () { showPopup('history'); });
 }
 
 function switchTheme() {
@@ -867,3 +1389,79 @@ function statusPriority(status) {
   }
 }
 
+function makeShowable(element, args) {
+  // TODO: See if you can do something less hacky than just setting custom
+  // prop on the element.
+  element.showHide = {
+    frame: args.frame,
+    target: !!args.show,
+  };
+  element.show = showHide_show;
+  showHide_setPhase.call(element, 'end');
+}
+
+function showHide_show(target) {
+  const element = this;
+  if (element.showHide.target == target) {
+    return;
+  }
+  const duration = showHide_getDuration.call(element);
+  const token = {};
+  element.showHide.token = token;
+  element.showHide.target = target;
+  element.showHide.phase = null;
+  showHide_setPhase.call(element, 'begin');
+  element.showHide.frame?.call(this);
+
+  requestAnimationFrame(function (t0) {
+    if (element.showHide.token !== token) {
+      return;
+    }
+    showHide_setPhase.call(element, 'transition');
+    const animationFrameCallback = function (t) {
+      if (element.showHide.token !== token) {
+        return;
+      }
+      if (t >= t0 + duration) {
+        showHide_setPhase.call(element, 'end');
+      }
+      element.showHide.frame?.call(element);
+      if (element.showHide.phase == 'transition') {
+        requestAnimationFrame(animationFrameCallback);
+      }
+    };
+    requestAnimationFrame(animationFrameCallback);
+  });
+}
+
+function showHide_setPhase(phase) {
+  if (this.showHide.phase == phase) {
+    return;
+  }
+  this.showHide.phase = phase;
+  let value = this.showHide.target ? 'show' : 'hide';
+  if (phase != 'end') {
+    value += '-' + phase;
+  }
+  this.setAttribute('show-hide', value);
+}
+
+function showHide_getDuration() {
+  const durationProperty =
+    getComputedStyle(this).getPropertyValue('--show-hide-duration');
+  console.assert(durationProperty.endsWith('ms'));
+  return parseInt(durationProperty.slice(0, -2));
+}
+
+function createElement(html) {
+  var template = document.createElement('template');
+  html = html.trim();
+  template.innerHTML = html;
+  return template.content.firstChild;
+}
+
+function createChildElement(parent, html) {
+  const child = createElement(html);
+  parent.append(child);
+  return child;
+}

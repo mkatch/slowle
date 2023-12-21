@@ -28,8 +28,9 @@
   </head>
   <body>
     <div class="game">
-      <header>
+      <header class="centered-main-content">
         <button class="icon-button help-button material-icons" onclick="showAboutPopup()">help_outline</button>
+        <button class="icon-button history-button material-icons" onclick="showHistoryPopup()">history</button>
         <div class="title">
           <h1>SŁOWLE</h1>
           <span class="subtitle">
@@ -48,15 +49,32 @@
             onclick="switchTheme()"></button>
       </header>
 
-      <div class="board-section">
-        <div id="boardContainerElement" class="board-container"></div>
+      <div id="extraBannerElement" show-hide="hide">
+        <div class="centered-main-content">
+          <div id="extraBannerContentElement"></div>
+          <div class="button-container">
+            <button
+                class="icon-button extra-banner-close-button material-icons"
+                onclick="onExtraBannerCloseClick()">
+              close
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div id="keyboardElement" tabindex="0"></div>
+      <div class="board-section centered-main-content">
+        <div class="board-horizontal-padding">
+          <div id="boardContainerElement" class="board-container"></div>
+        </div>
+      </div>
+
+      <div class="keyboard-section centered-main-content">
+        <div id="keyboardElement" tabindex="0"></div>
+      </div>
     </div>
 
     <div id="popupOverlayElement">
-      <div class="popup-container">
+      <div class="popup-container centered-main-content">
         <div class="popup">
           <button
               id="popupCloseButtonElement"
@@ -153,6 +171,17 @@
               Kontakt <a href="mailto:info@slowle.pl">info@slowle.pl</a>
               lub Twitter <a href="https://twitter.com/slowlepl">@slowlepl</a>.
             </p>
+          </div>
+
+          <div class="history-popup">
+            <h2>Historia</h2>
+            <ul id="openGamesElement"></ul>
+            <ul id="historyElement"></ul>
+          </div>
+
+          <div class="history-month-popup">
+            <h2 id="historyMonthTitleElement"></h2>
+            <ul id="historyMonthElement"></ul>
           </div>
         </div>
       </div>
