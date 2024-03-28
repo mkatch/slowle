@@ -1,5 +1,5 @@
 # SŁOWLE
 
-Nieoficjalne [WORDLE](https://www.powerlanguage.co.uk/wordle/) po polsku 🇵🇱
+Nieoficjalne [WORDLE](https://nytimes.com/games/wordle) po polsku 🇵🇱
 
-[mkacz91.github.io/slowle](https://mkacz91.github.io/slowle/)
+[slowle.pl](https://slowle.pl)
