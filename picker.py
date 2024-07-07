@@ -2,7 +2,7 @@ import json
 import random
 
 words = []
-unavailableWordIndices = set()
+usedWordIndices = set()
 rejectedWordIndices = set()
 
 with open("words.js", "r") as f:
@@ -15,27 +15,25 @@ with open("history.json", "r") as f:
     for item in history:
         index = item.get("index")
         if index is not None:
-            unavailableWordIndices.add(index)
+            usedWordIndices.add(index)
 
 with open("pool.json", "r") as f:
     pool = json.load(f)
-    unavailableWordIndices.update(pool)
+    usedWordIndices.update(pool)
 
 with open("solution.json", "r") as f:
     solution = json.load(f)
     for item in solution:
         index = item.get("index")
         if index is not None:
-            unavailableWordIndices.add(index)
+            usedWordIndices.add(index)
 
 with open("rejected.json") as f:
     rejected = json.load(f)
     rejectedWordIndices.update(rejected)
 
-unavailableWordIndices.update(rejectedWordIndices)
-
 availableWordIndices = [i for i in range(
-    len(words)) if i not in unavailableWordIndices]
+    len(words)) if i not in usedWordIndices and i not in rejectedWordIndices]
 random.shuffle(availableWordIndices)
 
 poolAdditions = []
@@ -62,6 +60,23 @@ while i < len(availableWordIndices):
         elif c == "r":
             i -= 2 # 2 instead of 1 to compensate for the increment at the end
             break
+        elif c.startswith("c "):
+            customWord = c[2:]
+            if customWord not in words:
+                print(customWord, "not in the dictionary")
+            else:
+                customWordIndex = words.index(customWord)
+                if customWordIndex in poolAdditions:
+                    print(customWord, "is already scheduled for addition")
+                elif customWordIndex in usedWordIndices:
+                    print(customWord, "has been used in the past")
+                else:
+                    if customWordIndex in rejectedWordIndices:
+                        rejectedWordIndices.remove(customWordIndex)
+                    if customWordIndex in availableWordIndices:
+                        availableWordIndices.remove(customWordIndex)
+                    poolAdditions.append(customWordIndex)
+                    break
         elif c == "q":
             quit = True
             break
