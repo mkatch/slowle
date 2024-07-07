@@ -39,20 +39,33 @@ availableWordIndices = [i for i in range(
 random.shuffle(availableWordIndices)
 
 poolAdditions = []
-for index in availableWordIndices:
-    print(words[index])
+i = 0
+while i < len(availableWordIndices):
+    wordIndex = availableWordIndices[i]
+    print(words[wordIndex])
+
+    # Undo previous operation if it is a redo. Otherwise this has no effect.
+    if wordIndex in poolAdditions:
+        poolAdditions.remove(wordIndex)
+    if wordIndex in rejectedWordIndices:
+        rejectedWordIndices.remove(wordIndex)
+    
     quit = False
     while True:
         c = input("Verdict: ")
         if c == "a":
-            poolAdditions.append(index)
+            poolAdditions.append(wordIndex)
             break
         elif c == "":
-            rejectedWordIndices.add(index)
+            rejectedWordIndices.add(wordIndex)
+            break
+        elif c == "r":
+            i -= 2 # 2 instead of 1 to compensate for the increment at the end
             break
         elif c == "q":
             quit = True
             break
+    i += 1
     if quit:
         break
 
