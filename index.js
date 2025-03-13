@@ -595,16 +595,23 @@ function loadSolution(callback) {
     }
     callbackCalled = true;
 
-    if (candidate) {
+    if (candidate && candidate.index) {
       solution = candidate;
       solution.word = WORDS[candidate.index];
 
-      if (solution.id == 230) {
-        showToast(
-          "Przepraszamy za kłopoty w czwartek, 25. sierpnia. " +
-          "Ten dzień nie liczy się do ocen a słowo czwartkowe przedłużone na " +
-          "piątek.",
-          7000);
+      if (solution.id >= 1159 && solution.id <= 1159 + 7) {
+        try {
+          dismissedAnnouncementsStr = localStorage.getItem('dismissedAnnouncements') ?? "[]";
+          dismissedAnnouncements = JSON.parse(dismissedAnnouncementsStr);
+          const announcementTag = "march13_outage"
+          if (!dismissedAnnouncements.includes(announcementTag)) {
+            dismissedAnnouncements.push(announcementTag);
+            localStorage.setItem('dismissedAnnouncements', JSON.stringify(dismissedAnnouncements));
+            showToast('Przepraszam za awarię 3-13 marca.<br>Dziękuję wszystkim za cierpliwość, wsparcie, i za granie w Słowle.', 0);
+          }
+        } catch (e) {
+          console.error(e)
+        }
       }
 
       callback();
@@ -721,20 +728,18 @@ function share() {
 }
 
 function showToast(message, duration = 3000) {
-  toastElement.children[0].textContent = message;
+  if (duration <= 0) {
+    message += "<br><br>(kliknij, żeby zamknąć)";
+  }
+
+  toastElement.children[0].innerHTML = message;
   toastElement.classList.add('visible');
   const tag = Object();
   toastElement.tag = tag;
-  setTimeout(function () {
-    if (toastElement.tag === tag) {
-      toastElement.classList.add('opacity0');
-      setTimeout(function () {
-        if (toastElement.tag === tag) {
-          toastElement.classList.remove('visible');
-        }
-      }, 200);
-    }
-  }, duration);
+
+  if (duration > 0) {
+    setTimeout(function () { closeToast(tag) }, duration);
+  }
 
   toastElement.classList.add('opacity0');
   window.requestAnimationFrame(function () {
@@ -742,6 +747,22 @@ function showToast(message, duration = 3000) {
       toastElement.classList.remove('opacity0');
     }
   });
+}
+
+function onToastClick() {
+  closeToast(toastElement.tag);
+}
+
+function closeToast(tag) {
+  if (toastElement.tag === tag) {
+    toastElement.classList.add('opacity0');
+    setTimeout(function () {
+      if (toastElement.tag === tag) {
+        closeToast()
+        toastElement.classList.remove('visible');
+      }
+    }, 200);
+  }
 }
 
 function showPopup(which) {
