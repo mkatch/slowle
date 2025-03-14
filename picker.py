@@ -35,6 +35,7 @@ with open("rejected.json") as f:
 availableWordIndices = [i for i in range(
     len(words)) if i not in usedWordIndices and i not in rejectedWordIndices]
 random.shuffle(availableWordIndices)
+print("Available words: ", len(availableWordIndices))
 
 poolAdditions = []
 i = 0
