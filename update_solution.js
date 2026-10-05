@@ -17,16 +17,31 @@ function padZeros(value, length) {
   return ('0'.repeat(length) + value).slice(-length);
 }
 
+let wordIndex;
 const pool = readJson('pool.json');
-const poolIndex = Math.floor((Math.random() * pool.length));
-const wordindex = pool[poolIndex];
-pool.splice(poolIndex, 1);
-writeJson(pool, 'pool.json');
+if (pool.length > 0) {
+  const poolIndex = Math.floor((Math.random() * pool.length));
+  wordIndex = pool[poolIndex];
+  pool.splice(poolIndex, 1);
+  writeJson(pool, 'pool.json');
+} else {
+  const history = readJson('history.json');
+  // First year was kinda wonky
+  const historyIndices = history.map(entry => entry.index).slice(365);
+  const recentlyUsedIndices = historyIndices.slice(-90);
+  const historyPoolSet = new Set(historyIndices);
+  for (const index of recentlyUsedIndices) {
+    historyPoolSet.delete(index);
+  }
+  const historyPool = [...historyPoolSet];
+  const poolIndex = Math.floor((Math.random() * historyPool.length));
+  wordIndex = historyPool[poolIndex];
+}
 
 // This script is supposed to run every day before midnight in Poland, which
 // is GMT+1 or GMT+2, depending on the time of year. We advance the time by 12
 // hours to be around noon the following day. This accounts for time zone
-// differences and scheduling incosistencies with a safe margin. Then we advance
+// differences and scheduling inconsistencies with a safe margin. Then we advance
 // by another 24 hours so that reading the UTC date gives the intended
 // expiration date. Note that the local timezone in which this script is
 // executed is not defined nor required.
@@ -42,7 +57,7 @@ const solutions = readJson('solution.json');
 const latestSolution = solutions[solutions.length - 1];
 solutions.push({
   id: latestSolution.id + 1,
-  index: wordindex,
+  index: wordIndex,
   expiration: expiration
 });
 writeJson(solutions, 'solution.json');
