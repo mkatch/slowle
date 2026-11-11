@@ -16,6 +16,8 @@
 
 body[theme=dark] {
   --blue: #2980B9;
+  --blue-dark: #236d9d;
+  --blue-darkest: #1d5a82;
   --green: #2E7D32;
   --green-dark: #266829;
   --green-darkest: #1b491d;
@@ -54,6 +56,8 @@ body[theme=dark] {
 
 body[theme=light] {
   --blue: #439BD6;
+  --blue-dark: #3984b6;
+  --blue-darkest: #2f6d96;
   --green: #5faa63;
   --green-dark: #37963c;
   --green-darkest: #2E7D32;
@@ -705,6 +709,30 @@ a {
   justify-content: center;
 }
 
-.about-popup hr {
-  margin-top: 2em;
+.about-popup .support {
+  display: flex;
+  justify-content: center;
+}
+
+.kofi-button {
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  padding: 10px 14px;
+  background-color: var(--blue);
+  color: white;
+  text-decoration: none;
+  transition: background-color 200ms;
+}
+
+.kofi-button:hover {
+  background-color: var(--blue-dark);
+}
+
+.kofi-button:active {
+  background-color: var(--blue-darkest);
+}
+
+.kofi-button .kofi-logo {
+  width: 22px;
 }
