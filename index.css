@@ -148,6 +148,21 @@ header > * {
   left: 0;
 }
 
+.support-button {
+  position: absolute;
+  left: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.kofi-logo {
+  width: 27px;
+}
+
 .theme-button {
   position: absolute;
   right: 0;
