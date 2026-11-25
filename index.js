@@ -356,7 +356,7 @@ function everySecond() {
   } else {
     const timeLeft = new Date(millisLeft);
     countdownElement.textContent =
-      padZeros(timeLeft.getUTCHours(), 2) + ":" +
+      padZeros(Math.floor(millisLeft / (60 * 60 * 1000)), 2) + ":" +
       padZeros(timeLeft.getUTCMinutes(), 2) + ":" +
       padZeros(timeLeft.getUTCSeconds(), 2);
   }
@@ -639,15 +639,18 @@ function loadSolution(callback) {
   request.onload = function () {
     const now = Date.now();
     const candidates = JSON.parse(request.responseText);
+    // Solutions are published several days in advance. Today's solution is
+    // the one which expires the soonest.
+    let current = null;
     for (let i = 0; i < candidates.length; ++i) {
       const candidate = candidates[i];
       candidate.expiration = Date.parse(candidate.expiration);
-      if (now <= candidate.expiration) {
-        guardedCallback(candidate);
-        return;
+      if (now < candidate.expiration &&
+          (current == null || candidate.expiration < current.expiration)) {
+        current = candidate;
       }
     }
-    failureCallback();
+    guardedCallback(current);
   }
 
   request.send(null);
